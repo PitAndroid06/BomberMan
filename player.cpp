@@ -71,7 +71,6 @@ bool player::iswall(int y, int x) {
 }
 bool player::isdead() {
     return dead;
-
 }
 
 void player::setdead(bool d) {
