@@ -1,6 +1,8 @@
 #include "Screen.h"
 #include <fstream>
 
+enum EntityChar{breakableWall, solidWall, player, enemy1, enemy2, exceptableValues};
+
 Screen::Screen(int start_x, int start_y, int width, int height){
   
   this->sizeX = width;
@@ -15,6 +17,19 @@ Screen::Screen(int start_x, int start_y, int width, int height){
   cbreak();             // Permette input immediato
   noecho();             // Non mostra i tasti premuti
   curs_set(0);
+  start_color();
+  use_default_colors();
+
+  short COLOR_GRAY =  8;
+  init_color(COLOR_GRAY, 500,500,500);
+
+  //hanno un valore +1 rispetto a EntityChar perchè init_pair come primo attributo ha value >= 1
+  init_pair(1, COLOR_GRAY, COLOR_GRAY);
+  init_pair(2, COLOR_WHITE, COLOR_WHITE);
+  init_pair(3, COLOR_GREEN, COLOR_BLACK);
+  init_pair(4, COLOR_RED, COLOR_BLACK);
+  init_pair(5, COLOR_BLUE, COLOR_BLACK);
+
   
   this->win = newwin(height, width, start_y, start_x);
   keypad(this->win, TRUE); // Abilita tasti speciali (F1, frecce, ecc.)
@@ -23,6 +38,12 @@ Screen::Screen(int start_x, int start_y, int width, int height){
   mvprintw(start_y-1, start_x + (width/2)-4, "Bomberman");
 
   refresh();
+}
+
+void Screen::printEntity(int color, char ch){
+  wattron(this->win, COLOR_PAIR(color+1));
+  wprintw(this->win, "%c", ch);
+  wattroff(this->win, COLOR_PAIR(color+1));
 }
 
 Screen::~Screen(){
@@ -54,7 +75,7 @@ bool Screen::loadLevels(string file){
     while (inputFile.get(ch) && row < this->sizeY){
       if(ch == '\r')continue;
       try{
-        if(ch != '1' && ch != '0' && ch != ' ' && ch != '\n')throw ch;
+        if((ch >= 48 + EntityChar::exceptableValues || ch < 48) && ch != '\n' && ch != ' ')throw ch;
         if (ch == '\n' || col >= this->sizeX){
           col = 0;
           row++;
@@ -139,12 +160,32 @@ void Screen::saveClassifica(string file){
 void Screen::drawLevel(){
   Map m = this->current_lvl->getMap();
   for(int i = 0; i < this->sizeY; i++){
-    wmove(this->win, i, 0);
-    
     for(int j = 0; j < this->sizeX; j++){
-      if(m[i][j] == '1') wprintw(this->win, "0");
-      else if(m[i][j] == '0') wprintw(this->win, "O");
-      else if (m[i][j] == ' ') wprintw(this->win, " ");
+      wmove(this->win, i, j);
+      if(m[i][j] == ' ') wprintw(this->win, " ");
+      else {
+        switch(int(m[i][j]-48)){
+          case EntityChar::breakableWall:
+            printEntity(EntityChar::breakableWall, ' ');
+            break;
+          case EntityChar::solidWall:
+            printEntity(EntityChar::solidWall, ' ');
+            break;
+          case EntityChar::player:
+            printEntity(EntityChar::player, '@');
+            break;
+            //init_player
+          case EntityChar::enemy1:
+            printEntity(EntityChar::enemy1, 'k');
+            //init_enemy1
+            break;
+          case EntityChar::enemy2:
+            printEntity(EntityChar::enemy2, 'k');
+            //init_enemy2
+            break;
+          default: break;
+        }
+      }
     }
   }
   refresh();

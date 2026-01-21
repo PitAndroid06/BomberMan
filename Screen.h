@@ -11,6 +11,8 @@ class Screen{
     Classifica classifica;
     int sizeX;
     int sizeY;
+
+    void printEntity(int color, char ch);
   public:
     Screen(int start_x, int start_y, int width, int height);
     ~Screen();

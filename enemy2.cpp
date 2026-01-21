@@ -5,6 +5,9 @@
 #include "enemy2.h"
 #include "player.h"
 #include "bullet.h"
+
+int min(int a, int b) {return a > b ? b : a;}
+int max(int a, int b) {return a < b ? b : a;}
 enemy2::enemy2(WINDOW*win, int y, int x, char c,player*pl)
 {
     lastBulletTime = std::chrono::steady_clock::now();
@@ -91,15 +94,15 @@ bool enemy2::wallbetween(player* p) {
     bool wall = false;
 
     if (p->yLoc == yLoc) {
-        int minx = std::min(xLoc, p->xLoc);
-        int maxx = std::max(xLoc, p->xLoc);
+        int minx = min(xLoc, p->xLoc);
+        int maxx = max(xLoc, p->xLoc);
         for (int x = minx + 1; x < maxx; x++)
             if ((mvwinch(curwin, yLoc, x) & A_CHARTEXT) == '#')
                 wall = true;
     }
     else if (p->xLoc == xLoc) {
-        int miny = std::min(yLoc, p->yLoc);
-        int maxy = std::max(yLoc, p->yLoc);
+        int miny = min(yLoc, p->yLoc);
+        int maxy = max(yLoc, p->yLoc);
         for (int y = miny + 1; y < maxy; y++)
             if ((mvwinch(curwin, y, xLoc) & A_CHARTEXT) == '#')
                 wall = true;
@@ -135,7 +138,7 @@ int enemy2::whereplayer(player*p) {
 void enemy2::firebullet(player *p) {
 
     auto now = std::chrono::steady_clock::now();
-    if (duration_cast<std::chrono::milliseconds>(now - lastBulletTime).count() < 1000)
+    if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastBulletTime).count() < 1000)
         return;
     if (!seeplayer(p)) return;
     if (wallbetween(p)) return;
