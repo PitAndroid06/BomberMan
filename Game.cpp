@@ -1,9 +1,9 @@
-#include "Screen.h"
+#include "Game.h"
 #include <fstream>
 
 enum EntityChar{breakableWall, solidWall, player, enemy1, enemy2, exceptableValues};
 
-Screen::Screen(int start_x, int start_y, int width, int height){
+Game::Game(int start_x, int start_y, int width, int height){
   
   this->sizeX = width;
   this->sizeY = height;
@@ -40,27 +40,27 @@ Screen::Screen(int start_x, int start_y, int width, int height){
   refresh();
 }
 
-void Screen::printEntity(int color, char ch){
+void Game::printEntity(int color, char ch){
   wattron(this->win, COLOR_PAIR(color+1));
   wprintw(this->win, "%c", ch);
   wattroff(this->win, COLOR_PAIR(color+1));
 }
 
-Screen::~Screen(){
+Game::~Game(){
   endwin();
   this->saveClassifica("config/scores.txt");
 }
 
-bool Screen::isLoaded(){
+bool Game::isLoaded(){
   if(this->current_lvl == nullptr)return false;
   else return true;
 }
 
-int Screen::checkInput(){
+int Game::checkInput(){
   return wgetch(this->win);
 }
 
-bool Screen::loadLevels(string file){
+bool Game::loadLevels(string file){
   fstream inputFile;
   inputFile.open(file);
   char ch;
@@ -108,7 +108,7 @@ bool Screen::loadLevels(string file){
   return true;
 }
 
-void Screen::loadClassifica(string file){
+void Game::loadClassifica(string file){
   fstream inputFile;
   inputFile.open(file);
   char ch;
@@ -146,7 +146,7 @@ void Screen::loadClassifica(string file){
   inputFile.close();
 }
 
-void Screen::saveClassifica(string file){
+void Game::saveClassifica(string file){
   ofstream outputFile;
   outputFile.open(file);
   record* r = this->classifica.getRecords();
@@ -157,7 +157,7 @@ void Screen::saveClassifica(string file){
   outputFile.close();
 }
 
-void Screen::drawLevel(){
+void Game::drawLevel(){
   Map m = this->current_lvl->getMap();
   for(int i = 0; i < this->sizeY; i++){
     for(int j = 0; j < this->sizeX; j++){
@@ -191,7 +191,7 @@ void Screen::drawLevel(){
   refresh();
 }
 
-int Screen::showMenu(){
+int Game::showMenu(){
   int ch;
   int choise = 0;
   int coord[3][2] = {{(this->sizeX/3)+1,(this->sizeY/4)},
@@ -217,7 +217,7 @@ int Screen::showMenu(){
   return choise;
 }
 
-void Screen::showClassifica(int page, int rec_per_page){
+void Game::showClassifica(int page, int rec_per_page){
   wclear(this->win);
   record* r = this->classifica.getRecords();
   if(r == nullptr && page == 0) mvwprintw(this->win, this->sizeY/4, (this->sizeX/4)+1, "Ancora nessun record");
@@ -256,13 +256,13 @@ void Screen::showClassifica(int page, int rec_per_page){
   }
 }
 
-bool Screen::goToNextLevel(){
+bool Game::goToNextLevel(){
   if(this->current_lvl->isLast()) return false;
   else this->current_lvl = this->current_lvl->getNextLvl();
   return true;
 }
 
-bool Screen::goToPrecLevel(){
+bool Game::goToPrecLevel(){
   if(this->current_lvl->isFirst()) return false;
   else this->current_lvl = this->current_lvl->getPrecLvl();
   return true;

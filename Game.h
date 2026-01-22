@@ -4,7 +4,7 @@
 #include "Classifica.h"
 using namespace std;
 
-class Screen{
+class Game{
   private:
     WINDOW* win = nullptr;
     Lvl* current_lvl = nullptr;
@@ -14,8 +14,8 @@ class Screen{
 
     void printEntity(int color, char ch);
   public:
-    Screen(int start_x, int start_y, int width, int height);
-    ~Screen();
+    Game(int start_x, int start_y, int width, int height);
+    ~Game();
 
     void drawLevel();
     
