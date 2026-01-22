@@ -1,18 +1,30 @@
 #include "Game.h"
 #include <fstream>
 
-enum EntityChar{breakableWall, solidWall, player, enemy1, enemy2, exceptableValues};
+/*caratteri per il gioco:
+
+player: ◉
+enemies: ▲, ■
+bonus1: ✪
+bonus2: ✚
+bombs: o, ●
+explosion: ✹
+walls: █, ░
+lives: ♥
+
+*/
 
 Game::Game(int start_x, int start_y, int width, int height){
   
-  this->sizeX = width;
-  this->sizeY = height;
+  this->sizeGridX = width;
+  this->sizeGridY = height;
   if(!this->loadLevels("config/levels.txt")) {
     cout<<"Avvio del programma non riuscito!"<<endl;
     return;
   }
   this->loadClassifica("config/scores.txt");
 
+  setlocale(LC_ALL, "");
   initscr();
   cbreak();             // Permette input immediato
   noecho();             // Non mostra i tasti premuti
@@ -20,18 +32,33 @@ Game::Game(int start_x, int start_y, int width, int height){
   start_color();
   use_default_colors();
 
-  short COLOR_GRAY =  8;
-  init_color(COLOR_GRAY, 500,500,500);
+  short COLOR_ORANGE = 9;
+  init_color(COLOR_ORANGE, 500,500,0);
 
   //hanno un valore +1 rispetto a EntityChar perchè init_pair come primo attributo ha value >= 1
-  init_pair(1, COLOR_GRAY, COLOR_GRAY);
+  init_pair(1, COLOR_WHITE, COLOR_BLACK);
   init_pair(2, COLOR_WHITE, COLOR_WHITE);
   init_pair(3, COLOR_GREEN, COLOR_BLACK);
-  init_pair(4, COLOR_RED, COLOR_BLACK);
-  init_pair(5, COLOR_BLUE, COLOR_BLACK);
+  init_pair(4, COLOR_BLUE, COLOR_BLACK);
+  init_pair(5, COLOR_RED, COLOR_BLACK);
+  init_pair(6, COLOR_YELLOW, COLOR_BLACK);
+  init_pair(7, COLOR_ORANGE, COLOR_BLACK);
+
+
+  this->AllEntitiesChar[0] = {codeEntities::breakableWall, "░", 1};
+  this->AllEntitiesChar[1] = {codeEntities::solidWall, "█", 2};
+  this->AllEntitiesChar[2] = {codeEntities::player, "◉", 3};
+  this->AllEntitiesChar[3] = {codeEntities::enemy1, "▲", 4};
+  this->AllEntitiesChar[4] = {codeEntities::enemy2, "■", 4};
+  this->AllEntitiesChar[5] = {codeEntities::bombAnimation1, "o", 5};
+  this->AllEntitiesChar[6] = {codeEntities::bombAnimation2, "●", 5};
+  this->AllEntitiesChar[7] = {codeEntities::bonus1, "✪", 6};
+  this->AllEntitiesChar[8] = {codeEntities::bonus2, "✚", 3};
+  this->AllEntitiesChar[9] = {codeEntities::explosion, "✹", 7};
+  this->AllEntitiesChar[10] = {codeEntities::lives, "♥", 5};
 
   
-  this->win = newwin(height, width, start_y, start_x);
+  this->win = newwin(height+1, width, start_y, start_x);
   keypad(this->win, TRUE); // Abilita tasti speciali (F1, frecce, ecc.)
   nodelay(this->win, TRUE);// getch ritorna -1 se non c'è input
   
@@ -40,10 +67,25 @@ Game::Game(int start_x, int start_y, int width, int height){
   refresh();
 }
 
-void Game::printEntity(int color, char ch){
-  wattron(this->win, COLOR_PAIR(color+1));
-  wprintw(this->win, "%c", ch);
-  wattroff(this->win, COLOR_PAIR(color+1));
+void Game::printEntity(codeEntities c){
+  int color = this->getEntityColor(c);
+  wattron(this->win, COLOR_PAIR(color));
+  wprintw(this->win, "%s", this->getEntityChar(c));
+  wattroff(this->win, COLOR_PAIR(color));
+}
+
+const char* Game::getEntityChar(codeEntities c){
+  for(int i = 0; i < CHARS_TO_DISPLAY; i++){
+    if(this->AllEntitiesChar[i].codeEntity == c) return this->AllEntitiesChar[i].ch;
+  }
+  return "";
+}
+
+int Game::getEntityColor(codeEntities c){
+  for(int i = 0; i < CHARS_TO_DISPLAY; i++){
+    if(this->AllEntitiesChar[i].codeEntity == c) return this->AllEntitiesChar[i].colorPair;
+  }
+  return -1;
 }
 
 Game::~Game(){
@@ -65,21 +107,21 @@ bool Game::loadLevels(string file){
   inputFile.open(file);
   char ch;
   while(inputFile.get(ch)){
-    Map map = new char*[this->sizeY];
-    for (int i = 0; i < this->sizeY; i++)
-      map[i] = new char[this->sizeX];
+    Map map = new char*[this->sizeGridY];
+    for (int i = 0; i < this->sizeGridY; i++)
+      map[i] = new char[this->sizeGridX];
     int row = 0;
     int col = 0;
     map[row][col] = ch;
     col++;
-    while (inputFile.get(ch) && row < this->sizeY){
+    while (inputFile.get(ch) && row < this->sizeGridY){
       if(ch == '\r')continue;
       try{
-        if((ch >= 48 + EntityChar::exceptableValues || ch < 48) && ch != '\n' && ch != ' ')throw ch;
-        if (ch == '\n' || col >= this->sizeX){
+        if((ch >= 48 + 5 || ch < 48) && ch != '\n' && ch != ' ')throw ch;
+        if (ch == '\n' || col >= this->sizeGridX){
           col = 0;
           row++;
-          if (row >= this->sizeY) break;
+          if (row >= this->sizeGridY) break;
           else continue;
         }
         map[row][col] = ch;
@@ -89,7 +131,7 @@ bool Game::loadLevels(string file){
         break;
       }
     }
-    if(row == this->sizeY && col == 0){
+    if(row == this->sizeGridY && col == 0){
       if(this->current_lvl == nullptr){
         this->current_lvl = new Lvl(map);
       } else {
@@ -159,28 +201,28 @@ void Game::saveClassifica(string file){
 
 void Game::drawLevel(){
   Map m = this->current_lvl->getMap();
-  for(int i = 0; i < this->sizeY; i++){
-    for(int j = 0; j < this->sizeX; j++){
+  for(int i = 0; i < this->sizeGridY; i++){
+    for(int j = 0; j < this->sizeGridX; j++){
       wmove(this->win, i, j);
       if(m[i][j] == ' ') wprintw(this->win, " ");
       else {
         switch(int(m[i][j]-48)){
-          case EntityChar::breakableWall:
-            printEntity(EntityChar::breakableWall, ' ');
+          case codeEntities::breakableWall:
+            printEntity(codeEntities::breakableWall);
             break;
-          case EntityChar::solidWall:
-            printEntity(EntityChar::solidWall, ' ');
+          case codeEntities::solidWall:
+            printEntity(codeEntities::solidWall);
             break;
-          case EntityChar::player:
-            printEntity(EntityChar::player, '@');
+          case codeEntities::player:
+            printEntity(codeEntities::player);
             break;
             //init_player
-          case EntityChar::enemy1:
-            printEntity(EntityChar::enemy1, 'k');
+          case codeEntities::enemy1:
+            printEntity(codeEntities::enemy1);
             //init_enemy1
             break;
-          case EntityChar::enemy2:
-            printEntity(EntityChar::enemy2, 'k');
+          case codeEntities::enemy2:
+            printEntity(codeEntities::enemy2);
             //init_enemy2
             break;
           default: break;
@@ -188,15 +230,20 @@ void Game::drawLevel(){
       }
     }
   }
+  //n_lives
+  wmove(this->win, this->sizeGridY, 1);
+  for(int i = 0; i < 3; i++){
+    this->printEntity(codeEntities::lives);
+  }
   refresh();
 }
 
 int Game::showMenu(){
   int ch;
   int choise = 0;
-  int coord[3][2] = {{(this->sizeX/3)+1,(this->sizeY/4)},
-                     {(this->sizeX/3)-3,(this->sizeY/4)+2},
-                     {(this->sizeX/3)+1,(this->sizeY/4)+4}};
+  int coord[3][2] = {{(this->sizeGridX/3)+1,(this->sizeGridY/4)},
+                     {(this->sizeGridX/3)-3,(this->sizeGridY/4)+2},
+                     {(this->sizeGridX/3)+1,(this->sizeGridY/4)+4}};
   
   wclear(this->win);
   mvwprintw(this->win, coord[0][1], coord[0][0]-3, ">  Nuova partita");
@@ -220,16 +267,16 @@ int Game::showMenu(){
 void Game::showClassifica(int page, int rec_per_page){
   wclear(this->win);
   record* r = this->classifica.getRecords();
-  if(r == nullptr && page == 0) mvwprintw(this->win, this->sizeY/4, (this->sizeX/4)+1, "Ancora nessun record");
+  if(r == nullptr && page == 0) mvwprintw(this->win, this->sizeGridY/4, (this->sizeGridX/4)+1, "Ancora nessun record");
   int pos = page*rec_per_page;
   for(int i = 0; i < pos; i++) r = r->next;
   do{
     string rec = r->nome + " - " + to_string(r->punteggio);
     if(pos < 3){
       rec = to_string((pos%5)+1) + ". " + rec;
-      mvwprintw(this->win, (((pos%5)+1)*2), (this->sizeX/3), "%s", rec.c_str());
+      mvwprintw(this->win, (((pos%5)+1)*2), (this->sizeGridX/3), "%s", rec.c_str());
     } else 
-    mvwprintw(this->win, (((pos%5)+1)*2), (this->sizeX/3)+3, "%s", rec.c_str());
+    mvwprintw(this->win, (((pos%5)+1)*2), (this->sizeGridX/3)+3, "%s", rec.c_str());
     pos++;
     r = r->next;
     if(r == nullptr) break;
@@ -239,7 +286,7 @@ void Game::showClassifica(int page, int rec_per_page){
   else bar += "  ";
   bar += "Page " + to_string(page+1);
   if(r != nullptr)bar += " >";
-  mvwprintw(this->win, this->sizeY - 2, (this->sizeX/2)-(bar.length()/2), "%s", bar.c_str());
+  mvwprintw(this->win, this->sizeGridY - 2, (this->sizeGridX/2)-(bar.length()/2), "%s", bar.c_str());
   int ch;
   while((ch = this->checkInput()) != '\n'){
     if(ch == KEY_LEFT){

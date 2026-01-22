@@ -1,1 +1,1 @@
-g++ *.cpp -lncurses -o ./bin/Bomberman && ./bin/Bomberman
+g++ *.cpp -lncursesw -o ./bin/Bomberman && ./bin/Bomberman
