@@ -1,8 +1,8 @@
 #include <ncurses.h>
-#include "Screen.h"
+#include "Game.h"
 
 int main() {
-    Screen screen(10, 5, 40, 20);
+    Game screen(10, 5, 40, 20);
     if(!screen.isLoaded()) return 0;
     int c = 1;
     while(1){
@@ -20,11 +20,11 @@ int main() {
         } else if(c == 1){ //Visualizza classifica
             screen.showClassifica();
         } else if(c == 2){ //Esci dal gioco
-            screen.~Screen();
+            screen.~Game();
             return 0;
         }
     }
     
-    screen.~Screen();
+    screen.~Game();
     return 0;
 }
