@@ -2,78 +2,71 @@
 // Created by simone on 12/10/25.
 //
 
-#include "player.h"
-player::player(WINDOW*win, int y, int x, char c)
+#include "Player.h"
+Player::Player(int y, int x)
 {
-    curwin=win;
     yLoc=y;
     xLoc=x;
-    getmaxyx(curwin,yMax,xMax);
-    keypad (curwin, true);
-    character=c;
     lives=3;
 }
 
-void player::mvup() {
-    if (!iswall(yLoc - 1, xLoc))
-    yLoc--;
-    if (yLoc<1) yLoc=1;
+bool Player::mvup(Map grid) {
+    if (!iswall(grid, yLoc - 1, xLoc)){
+        yLoc--;
+        return true;
+    }
+    return false;
 
 }
-void player::mvdown() {
-    if (!iswall(yLoc + 1, xLoc))
-    yLoc++;
-    if (yLoc>yMax-2) yLoc=yMax-2;
+
+bool Player::mvdown(Map grid) {
+    if (!iswall(grid, yLoc + 1, xLoc)){
+        yLoc++;
+        return true;
+    }
+    return false;
 }
-void player::mvleft() {
-    if (!iswall(yLoc , xLoc-1))
-    xLoc--;
-    if (xLoc<1) xLoc=1;
+
+bool Player::mvleft(Map grid) {
+    if (!iswall(grid, yLoc , xLoc-1)){
+        xLoc--;
+        return true;
+    }
+    return false;
 }
-void player::mvright() {
-    if (!iswall(yLoc , xLoc+1))
-    xLoc++;
-    if (xLoc>xMax-2) xLoc=xMax-2;
+
+bool Player::mvright(Map grid) {
+    if (!iswall(grid, yLoc , xLoc+1)) {
+        xLoc++;
+        return true;
+    }
+    return false;
 }
-int player::getmv(int choice) {
+
+bool Player::getmv(int choice, Map grid) {
     switch (choice) {
         case 'w':
-            mvwaddch(curwin,yLoc,xLoc,' ');
-            mvup();
-            break;
+            return mvup(grid);
         case 's':
-            mvwaddch(curwin,yLoc,xLoc,' ');
-            mvdown();
-            break;
+            return mvdown(grid);
         case 'd':
-            mvwaddch(curwin,yLoc,xLoc,' ');
-            mvright();
-            break;
+            return mvright(grid);
         case 'a':
-            mvwaddch(curwin,yLoc,xLoc,' ');
-            mvleft();
-            break;
+            return mvleft(grid);
         default:
             break;
     }
-    return choice;
 }
 
-void player::display() {
-     wattron(curwin,COLOR_PAIR(1));
-    mvwaddch(curwin,yLoc,xLoc,character);
-    wattroff(curwin,COLOR_PAIR(1));
+bool Player::iswall(Map grid, int x, int y) {
+    return grid[x][y] == 0 || grid[x][y] == 1;
 }
-bool player::iswall(int y, int x) {
 
-    char ch = mvwinch(curwin, y, x) & A_CHARTEXT;
-    return ch == '#';
-}
-bool player::isdead() {
+bool Player::isdead() {
     return dead;
 }
 
-void player::setdead(bool d) {
+void Player::setdead(bool d) {
     if (d && !invulnerable) {
         dead= true;
         liveschange(0);
@@ -82,7 +75,7 @@ void player::setdead(bool d) {
 
     }
 }
-void player::invulnerability() {
+void Player::invulnerability() {
     if (invulnerable) {
         auto now = std::chrono::steady_clock::now();
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastDamageTime).count() >= invulnerableTime) {
@@ -92,7 +85,7 @@ void player::invulnerability() {
     }
 }
 
-void player::liveschange(int plusminus) {
+void Player::liveschange(int plusminus) {
     if (plusminus==1){lives++;}
     if (plusminus==0){lives--;}
 }

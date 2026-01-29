@@ -6,22 +6,23 @@
 #define PLAYERENEMIES_PLAYER_H
 #include <ncurses.h>
 #include <chrono>
+#include "Levels.h"
 
-class player {
+class Player {
     public:
     bool invulnerable = false;
     std::chrono::steady_clock::time_point lastDamageTime;
 
     int invulnerableTime = 1000;
-    int yLoc, xLoc;
-    player(WINDOW*win, int y, int x, char c);
-    void mvup();
-    void mvdown();
-    void mvleft();
-    void mvright();
-    int getmv(int ch);
+    
+    Player(int y, int x);
+    bool mvup(Map grid);
+    bool mvdown(Map grid);
+    bool mvleft(Map grid);
+    bool mvright(Map grid);
+    bool getmv(int ch, Map grid);
     void display();
-    bool iswall(int y, int x);
+    bool iswall(Map grid, int y, int x);
     bool isdead();
     void setdead(bool d);
     void invulnerability();
@@ -29,11 +30,8 @@ class player {
 
     int lives;
 private:
-    WINDOW *curwin;
-    int yMax, xMax;
-    char character;
+    int yLoc, xLoc;
     bool dead;
-
 };
 
 

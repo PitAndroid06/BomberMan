@@ -20,6 +20,7 @@ class Game{
     Lvl* current_lvl = nullptr;
     Classifica classifica;
     Entity AllEntitiesChar[CHARS_TO_DISPLAY];
+    Player pl = Player()
     int sizeGridX;
     int sizeGridY;
 
