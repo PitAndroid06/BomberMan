@@ -333,7 +333,6 @@ void Game::runTime(){
         //move right player if possible
         break;
       case ' ':
-        //place bomb
         break;
       case 'q':
         //use cure
