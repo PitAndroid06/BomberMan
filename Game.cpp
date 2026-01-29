@@ -215,8 +215,8 @@ void Game::drawLevel(){
             break;
           case codeEntities::player:
             printEntity(codeEntities::player);
+            this->pl = Player(i, j);
             break;
-            //init_player
           case codeEntities::enemy1:
             printEntity(codeEntities::enemy1);
             //init_enemy1
@@ -316,33 +316,34 @@ bool Game::goToPrecLevel(){
 }
 
 void Game::runTime(){
-  char ch;
+  int ch;
   while(1){
     ch = this->checkInput();
-    switch(ch){
-      case 'w':
-        //move up player if possible
-        break;
-      case 'a':
-        //move left player if possible
-        break;
-      case 's':
-        //move down player if possible
-        break;
-      case 'd':
-        //move right player if possible
-        break;
-      case ' ':
-        //place bomb
-        break;
-      case 'q':
-        //use cure
-        break;
-      default: break;
+    if(ch == 'q') break;
+    else if(ch != -1){
+      int x = this->pl.getXLoc();
+      int y = this->pl.getYLoc();
+      Map update = this->pl.getmv(ch, this->current_lvl->getMap());
+      if(update != nullptr){
+        mvwprintw(this->win, y, x, " ");
+        wmove(this->win, this->pl.getYLoc(), this->pl.getXLoc());
+        printEntity(codeEntities::player);
+        this->current_lvl->updateMap(update);
+      }
+      switch(ch){
+        case ' ':
+          //place bomb
+          break;
+        case 'e':
+          //use cure
+          break;
+        default: break;
+      }
     }
     //move all enemies.
     //check if a bomb is exploded and so destroy walls, enemies or player.
     //check if level is completed and break.
+    refresh();
   }
   //destroy wall at the right.
 }

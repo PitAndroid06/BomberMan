@@ -44,3 +44,7 @@ bool Lvl::isFirst(){
 bool Lvl::isLast(){
   return this->nextLvl == nullptr;
 }
+
+void Lvl::updateMap(Map map){
+  this->map = map;
+}

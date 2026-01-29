@@ -15,18 +15,21 @@ class Player {
 
     int invulnerableTime = 1000;
     
+    Player();
     Player(int y, int x);
     bool mvup(Map grid);
     bool mvdown(Map grid);
     bool mvleft(Map grid);
     bool mvright(Map grid);
-    bool getmv(int ch, Map grid);
+    Map getmv(int ch, Map grid);
     void display();
     bool iswall(Map grid, int y, int x);
     bool isdead();
     void setdead(bool d);
     void invulnerability();
     void liveschange(int plusminus);
+    int getXLoc();
+    int getYLoc();
 
     int lives;
 private:

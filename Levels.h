@@ -16,6 +16,7 @@ class Lvl{
     Lvl* getNextLvl();
     Lvl* getPrecLvl();
     Map getMap();
+    void updateMap(Map map);
     void addLvl(Lvl* newLvl);
     bool isFirst();
     bool isLast();

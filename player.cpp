@@ -10,56 +10,78 @@ Player::Player(int y, int x)
     lives=3;
 }
 
+Player::Player(){}
+
 bool Player::mvup(Map grid) {
-    if (!iswall(grid, yLoc - 1, xLoc)){
-        yLoc--;
+    if (!iswall(grid, this->xLoc, this->yLoc - 1)){
+        this->yLoc--;
         return true;
     }
     return false;
-
 }
 
 bool Player::mvdown(Map grid) {
-    if (!iswall(grid, yLoc + 1, xLoc)){
-        yLoc++;
+    if (!iswall(grid, this->xLoc, this->yLoc + 1)){
+        this->yLoc++;
         return true;
     }
     return false;
 }
 
 bool Player::mvleft(Map grid) {
-    if (!iswall(grid, yLoc , xLoc-1)){
-        xLoc--;
+    if (!iswall(grid, this->xLoc-1, this->yLoc)){
+        this->xLoc--;
         return true;
     }
     return false;
 }
 
 bool Player::mvright(Map grid) {
-    if (!iswall(grid, yLoc , xLoc+1)) {
-        xLoc++;
+    if (!iswall(grid, this->xLoc+1, this->yLoc)) {
+        this->xLoc++;
         return true;
     }
     return false;
 }
 
-bool Player::getmv(int choice, Map grid) {
+Map Player::getmv(int choice, Map grid) {
     switch (choice) {
         case 'w':
-            return mvup(grid);
+            if (mvup(grid)){
+                grid[yLoc+1][xLoc] = ' ';
+                grid[yLoc][xLoc] = '2';
+                return grid;
+            }
+            break;
         case 's':
-            return mvdown(grid);
+            if (mvdown(grid)){
+                grid[yLoc-1][xLoc] = ' ';
+                grid[yLoc][xLoc] = '2';
+                return grid;
+            }
+            break;
         case 'd':
-            return mvright(grid);
+            if (mvright(grid)){
+                grid[yLoc][xLoc-1] = ' ';
+                grid[yLoc][xLoc] = '2';
+                return grid;
+            }
+            break;
         case 'a':
-            return mvleft(grid);
+            if (mvleft(grid)){
+                grid[yLoc][xLoc+1] = ' ';
+                grid[yLoc][xLoc] = '2';
+                return grid;
+            }
+            break;
         default:
             break;
     }
+    return nullptr;
 }
 
 bool Player::iswall(Map grid, int x, int y) {
-    return grid[x][y] == 0 || grid[x][y] == 1;
+    return grid[y][x] == '0' || grid[y][x] == '1';
 }
 
 bool Player::isdead() {
@@ -89,3 +111,7 @@ void Player::liveschange(int plusminus) {
     if (plusminus==1){lives++;}
     if (plusminus==0){lives--;}
 }
+
+int Player::getXLoc(){return xLoc;}
+
+int Player::getYLoc(){return yLoc;}

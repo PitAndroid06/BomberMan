@@ -9,14 +9,7 @@ int main() {
         c = screen.showMenu();
         if(c == 0){ //Nuova partità
             screen.drawLevel();
-            int ch;
-            while ((ch = screen.checkInput()) != 'q') {
-                if(ch == 'd'){
-                    if(screen.goToNextLevel()) screen.drawLevel();
-                } else if(ch == 'a'){
-                    if(screen.goToPrecLevel()) screen.drawLevel();
-                }
-            }
+            screen.runTime();
         } else if(c == 1){ //Visualizza classifica
             screen.showClassifica();
         } else if(c == 2){ //Esci dal gioco

@@ -5,7 +5,7 @@
 #ifndef PLAYERENEMIES_BULLET_H
 #define PLAYERENEMIES_BULLET_H
 #include <ncurses.h>
-#include "player.h"
+#include "Player.h"
 
 
 class bullet {
@@ -13,8 +13,8 @@ public:
     int xLoc,yLoc,direction;
     bool active;
     WINDOW*curwin;
-    player*p;
-    bullet(WINDOW* win, int x, int y, int direction,player*p);
+    Player*p;
+    bullet(WINDOW* win, int x, int y, int direction,Player*p);
     void move();
     bool iswall(int x, int y);
     void display();

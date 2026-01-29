@@ -9,16 +9,16 @@
 #include <chrono>
 
 #include "bullet.h"
-#include "player.h"
+#include "Player.h"
 class enemy2 {
 public:
     std::chrono::steady_clock::time_point lastBulletTime;
 
     int yLoc, xLoc;
     int k;
-    enemy2(WINDOW * win, int y, int x, char c,player*p);
+    enemy2(WINDOW * win, int y, int x, char c,Player*p);
     bullet*b[BU];
-    player*p;
+    Player*p;
     void mvup();
     void mvdown();
     void mvleft();
@@ -28,10 +28,10 @@ public:
     bool iswall(int y, int x);
     bool isdead();
     void setdead(bool d);
-    bool wallbetween(player*p);
-    bool seeplayer(player*p);
-    int whereplayer(player*p);
-    void firebullet(player*p);
+    bool wallbetween(Player*p);
+    bool seePlayer(Player*p);
+    int wherePlayer(Player*p);
+    void firebullet(Player*p);
 private:
     WINDOW *curwin;
     int yMax, xMax;

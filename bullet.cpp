@@ -4,7 +4,7 @@
 
 #include "bullet.h"
 #include "player.h"
-bullet::bullet(WINDOW *win, int x, int y, int direction,player*p) {
+bullet::bullet(WINDOW *win, int x, int y, int direction,Player*p) {
     curwin=win;
     xLoc=x;
     yLoc=y;
@@ -35,7 +35,7 @@ void bullet::move() {
         if (iswall(xLoc,yLoc)||xLoc<=1||yLoc<=1||xLoc>=48||yLoc>=18) {deactivate();}
         else mvwaddch(curwin,yLoc,xLoc,'*');
 
-        if (p->xLoc == xLoc && p->yLoc == yLoc) {
+        if (p->getXLoc() == xLoc && p->getXLoc() == yLoc) {
             p->setdead(true);
             deactivate();
         }

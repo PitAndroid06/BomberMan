@@ -1,7 +1,7 @@
 #include <ncurses.h>
 #include <iostream>
-#include "Levels.h"
 #include "Classifica.h"
+#include "Player.h"
 using namespace std;
 
 enum codeEntities{breakableWall, solidWall, player, enemy1, enemy2, bonus1, bonus2, bombAnimation1, bombAnimation2, explosion, lives};
@@ -20,7 +20,7 @@ class Game{
     Lvl* current_lvl = nullptr;
     Classifica classifica;
     Entity AllEntitiesChar[CHARS_TO_DISPLAY];
-    Player pl = Player()
+    Player pl;
     int sizeGridX;
     int sizeGridY;
 

@@ -3,12 +3,12 @@
 //
 
 #include "enemy2.h"
-#include "player.h"
+#include "Player.h"
 #include "bullet.h"
 
 int min(int a, int b) {return a > b ? b : a;}
 int max(int a, int b) {return a < b ? b : a;}
-enemy2::enemy2(WINDOW*win, int y, int x, char c,player*pl)
+enemy2::enemy2(WINDOW*win, int y, int x, char c,Player*pl)
 {
     lastBulletTime = std::chrono::steady_clock::now();
     p=pl;
@@ -90,19 +90,19 @@ void enemy2::setdead(bool d) {
     dead = d;
 }
 
-bool enemy2::wallbetween(player* p) {
+bool enemy2::wallbetween(Player* p) {
     bool wall = false;
 
-    if (p->yLoc == yLoc) {
-        int minx = min(xLoc, p->xLoc);
-        int maxx = max(xLoc, p->xLoc);
+    if (p->getYLoc() == yLoc) {
+        int minx = min(xLoc, p->getXLoc());
+        int maxx = max(xLoc, p->getXLoc());
         for (int x = minx + 1; x < maxx; x++)
             if ((mvwinch(curwin, yLoc, x) & A_CHARTEXT) == '#')
                 wall = true;
     }
-    else if (p->xLoc == xLoc) {
-        int miny = min(yLoc, p->yLoc);
-        int maxy = max(yLoc, p->yLoc);
+    else if (p->getXLoc() == xLoc) {
+        int miny = min(yLoc, p->getYLoc());
+        int maxy = max(yLoc, p->getYLoc());
         for (int y = miny + 1; y < maxy; y++)
             if ((mvwinch(curwin, y, xLoc) & A_CHARTEXT) == '#')
                 wall = true;
@@ -112,37 +112,37 @@ bool enemy2::wallbetween(player* p) {
 }
 
 
-bool enemy2::seeplayer(player *p) {
+bool enemy2::seePlayer(Player *p) {
     bool see;
-    if (p->xLoc==xLoc||p->yLoc==yLoc) {
+    if (p->getXLoc()==xLoc||p->getYLoc()==yLoc) {
         see = true;
     }else {see=false;}
     return see;
 }
 
-int enemy2::whereplayer(player*p) {
+int enemy2::wherePlayer(Player*p) {
 
-    if (seeplayer(p)) {
-        if (p->yLoc==yLoc&&p->xLoc<xLoc) {
+    if (seePlayer(p)) {
+        if (p->getYLoc()==yLoc&&p->getXLoc()<xLoc) {
             k=1;
-        }else if (p->xLoc==xLoc&&p->yLoc<yLoc) {
+        }else if (p->getXLoc()==xLoc&&p->getYLoc()<yLoc) {
             k=3;
-        }else if (p->yLoc==yLoc&&p->xLoc>xLoc) {
+        }else if (p->getYLoc()==yLoc&&p->getXLoc()>xLoc) {
             k=2;
-        }else if (p->xLoc==xLoc&&p->yLoc>yLoc) {
+        }else if (p->getXLoc()==xLoc&&p->getYLoc()>yLoc) {
             k=4;
         }
     }return k;
 }
 
-void enemy2::firebullet(player *p) {
+void enemy2::firebullet(Player *p) {
 
     auto now = std::chrono::steady_clock::now();
     if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastBulletTime).count() < 1000)
         return;
-    if (!seeplayer(p)) return;
+    if (!seePlayer(p)) return;
     if (wallbetween(p)) return;
-    int dir = whereplayer(p);
+    int dir = wherePlayer(p);
     if (dir == 0) return;
     for (int i = 0; i < BU; i++) {
 
