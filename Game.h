@@ -46,4 +46,6 @@ class Game{
     bool goToPrecLevel();
 
     bool isLoaded();
+
+    void runTime();
 };

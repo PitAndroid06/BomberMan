@@ -314,3 +314,35 @@ bool Game::goToPrecLevel(){
   else this->current_lvl = this->current_lvl->getPrecLvl();
   return true;
 }
+
+void Game::runTime(){
+  char ch;
+  while(1){
+    ch = this->checkInput();
+    switch(ch){
+      case 'w':
+        //move up player if possible
+        break;
+      case 'a':
+        //move left player if possible
+        break;
+      case 's':
+        //move down player if possible
+        break;
+      case 'd':
+        //move right player if possible
+        break;
+      case ' ':
+        //place bomb
+        break;
+      case 'q':
+        //use cure
+        break;
+      default: break;
+    }
+    //move all enemies.
+    //check if a bomb is exploded and so destroy walls, enemies or player.
+    //check if level is completed and break.
+  }
+  //destroy wall at the right.
+}
