@@ -14,7 +14,8 @@ lives: ♥
 
 */
 
-Game::Game(int start_x, int start_y, int width, int height){
+Game::Game(int start_x, int start_y, int width, int height)
+    : bombHandler(width, height) {
   
   this->sizeGridX = width;
   this->sizeGridY = height;
@@ -225,6 +226,9 @@ void Game::drawLevel(){
             printEntity(codeEntities::enemy2);
             //init_enemy2
             break;
+          case codeEntities::bonus1:
+            printEntity(codeEntities::bonus1);
+            break;
           default: break;
         }
       }
@@ -323,6 +327,22 @@ void Game::runTime(){
     else if(ch != -1){
       int x = this->pl.getXLoc();
       int y = this->pl.getYLoc();
+
+      // Controlla se il giocatore sta per raccogliere un item ('5' = bonus1)
+      if (ch == 'w' || ch == 's' || ch == 'a' || ch == 'd') {
+        int nextX = x, nextY = y;
+        if (ch == 'w') nextY--;
+        else if (ch == 's') nextY++;
+        else if (ch == 'a') nextX--;
+        else if (ch == 'd') nextX++;
+        
+        if (nextY >= 0 && nextY < this->sizeGridY && nextX >= 0 && nextX < this->sizeGridX) {
+            if (this->current_lvl->getMap()[nextY][nextX] == '5') {
+                this->itemHandler.collect();
+            }
+        }
+      }
+
       Map update = this->pl.getmv(ch, this->current_lvl->getMap());
       if(update != nullptr){
         mvwprintw(this->win, y, x, " ");
@@ -332,7 +352,7 @@ void Game::runTime(){
       }
       switch(ch){
         case ' ':
-          //place bomb
+          this->bombHandler.placeBomb(this->pl.getXLoc(), this->pl.getYLoc(), this->itemHandler.getBombRadius(), 30);
           break;
         case 'e':
           //use cure
@@ -340,10 +360,67 @@ void Game::runTime(){
         default: break;
       }
     }
+    // Aggiorna bomba e item
+    this->itemHandler.update();
+    this->bombHandler.update(this->current_lvl->getMap());
+
+    // Gestisci esplosione
+    if (this->bombHandler.hasExploded()) {
+      ExplosionCell* cells = this->bombHandler.getExplosionCells();
+      int size = this->bombHandler.getExplosionSize();
+
+      // Controlla se il giocatore è stato colpito
+      for (int i = 0; i < size; i++) {
+        if (cells[i].x == this->pl.getXLoc() && cells[i].y == this->pl.getYLoc()) {
+          this->pl.liveschange(0);
+          break; // colpito una sola volta per esplosione
+        }
+      }
+
+      // Disegna esplosione a schermo
+      for (int i = 0; i < size; i++) {
+        wmove(this->win, cells[i].y, cells[i].x);
+        printEntity(codeEntities::explosion);
+      }
+      wrefresh(this->win);
+      napms(500); // mostra esplosione per mezzo secondo
+
+      // Pulisci celle dell'esplosione
+      for (int i = 0; i < size; i++) {
+        wmove(this->win, cells[i].y, cells[i].x);
+        wprintw(this->win, " ");
+      }
+      // Ridisegna il giocatore (potrebbe essere su una cella colpita)
+      wmove(this->win, this->pl.getYLoc(), this->pl.getXLoc());
+      printEntity(codeEntities::player);
+
+      // Aggiorna display vite
+      wmove(this->win, this->sizeGridY, 1);
+      for (int i = 0; i < this->pl.lives; i++) {
+        printEntity(codeEntities::lives);
+      }
+      wprintw(this->win, "  ");
+
+      this->bombHandler.clearExplosion();
+
+      // Game over: il giocatore non ha più vite
+      if (this->pl.lives <= 0) break;
+    }
+
+    // Disegna bomba se attiva
+    bomb* b = this->bombHandler.getBomb();
+    if (b != nullptr) {
+      wmove(this->win, b->y, b->x);
+      if (b->timer > 15) {
+        printEntity(codeEntities::bombAnimation1);
+      } else {
+        printEntity(codeEntities::bombAnimation2);
+      }
+    }
+
     //move all enemies.
-    //check if a bomb is exploded and so destroy walls, enemies or player.
     //check if level is completed and break.
-    refresh();
+    wrefresh(this->win);
+    napms(100); // ~10 FPS
   }
-  //destroy wall at the right.
 }

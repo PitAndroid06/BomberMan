@@ -1,3 +1,6 @@
+#ifndef BOMBERMAN_LEVELS_H
+#define BOMBERMAN_LEVELS_H
+
 typedef char** Map;
 
 //const char* SOLID_WALL = "0\0";
@@ -21,3 +24,5 @@ class Lvl{
     bool isFirst();
     bool isLast();
 };
+
+#endif // BOMBERMAN_LEVELS_H

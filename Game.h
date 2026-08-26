@@ -1,7 +1,12 @@
+#ifndef BOMBERMAN_GAME_H
+#define BOMBERMAN_GAME_H
+
 #include <ncurses.h>
 #include <iostream>
 #include "Classifica.h"
 #include "Player.h"
+#include "Bomb.h"
+#include "Item.h"
 using namespace std;
 
 enum codeEntities{breakableWall, solidWall, player, enemy1, enemy2, bonus1, bonus2, bombAnimation1, bombAnimation2, explosion, lives};
@@ -23,6 +28,8 @@ class Game{
     Player pl;
     int sizeGridX;
     int sizeGridY;
+    BombHandler bombHandler;
+    Item itemHandler;
 
     void printEntity(codeEntities c);
     const char* getEntityChar(codeEntities c);
@@ -50,3 +57,5 @@ class Game{
 
     void runTime();
 };
+
+#endif // BOMBERMAN_GAME_H

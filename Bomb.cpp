@@ -1,14 +1,23 @@
 #include "Bomb.h"
-class player;
-class enemy1;
-class enemy2;
+#include <cstdlib>
 
-BombHandler::BombHandler() {
+BombHandler::BombHandler(int gridWidth, int gridHeight) {
     this->activeBomb = nullptr;
+    this->gridW = gridWidth;
+    this->gridH = gridHeight;
+    this->numExplosionCells = 0;
+    this->exploded = false;
+}
+
+BombHandler::~BombHandler() {
+    if (this->activeBomb != nullptr) {
+        delete this->activeBomb;
+        this->activeBomb = nullptr;
+    }
 }
 
 bool BombHandler::placeBomb(int x, int y, int raggio, int timer) {
-
+    // Una sola bomba attiva alla volta
     if (this->activeBomb != nullptr) {
         return false;
     }
@@ -29,39 +38,52 @@ void BombHandler::update(Map map) {
     }
 }
 
-void BombHandler::explode(Map map, *player p, *enemy1 e1, *enemy2 e2) {
+void BombHandler::explode(Map map) {
     if (this->activeBomb == nullptr) return;
 
     int bx = this->activeBomb->x;
     int by = this->activeBomb->y;
     int r = this->activeBomb->raggio;
 
+    // Reset dati esplosione precedente
+    this->numExplosionCells = 0;
+    this->exploded = true;
+
+    // Il centro dell'esplosione (dove stava la bomba)
+    this->explosionCells[this->numExplosionCells++] = {bx, by};
+
+    // 4 direzioni: su, giù, destra, sinistra
     int dx[] = {0, 0, 1, -1};
-    int dy[] = {1, -1, 0, 0};
+    int dy[] = {-1, 1, 0, 0};
 
-    for (int i = 0; i < 4; i++) {
-        for (int j = 1; j <= r; j++) {
-            int nx = bx + (dx[i] * j);
-            int ny = by + (dy[i] * j);
+    for (int dir = 0; dir < 4; dir++) {
+        for (int step = 1; step <= r; step++) {
+            int nx = bx + dx[dir] * step;
+            int ny = by + dy[dir] * step;
 
-            if (map[ny][nx] == '2') {
-                p->liveschange(0);
-            }
-
-            if (map[ny][nx] == '3') {
-                e1->setdead(true);
-            }
-
-            if (map[ny][nx] == '4') {
-                e2->setdead(true);
-            }
-
-            if (map[ny][nx] == '0') {
-                map[ny][nx] = ' ';
+            // Controllo limiti matrice — FONDAMENTALE per evitare crash
+            if (nx < 0 || nx >= this->gridW || ny < 0 || ny >= this->gridH) {
                 break;
             }
 
+            // Muro solido: l'esplosione si ferma, il muro resta intatto
             if (map[ny][nx] == '1') {
+                break;
+            }
+
+            // Registra cella come colpita dall'esplosione
+            if (this->numExplosionCells < MAX_EXPLOSION_CELLS) {
+                this->explosionCells[this->numExplosionCells++] = {nx, ny};
+            }
+
+            // Muro distruttibile: distruggi nella mappa e fermati
+            // (l'esplosione non attraversa un muro appena distrutto)
+            if (map[ny][nx] == '0') {
+                if (rand() % 100 < 30) {
+                    map[ny][nx] = '5'; // Drop item
+                } else {
+                    map[ny][nx] = ' '; // Solo distruzione
+                }
                 break;
             }
         }
@@ -70,4 +92,21 @@ void BombHandler::explode(Map map, *player p, *enemy1 e1, *enemy2 e2) {
 
 bomb* BombHandler::getBomb() {
     return this->activeBomb;
+}
+
+bool BombHandler::hasExploded() {
+    return this->exploded;
+}
+
+ExplosionCell* BombHandler::getExplosionCells() {
+    return this->explosionCells;
+}
+
+int BombHandler::getExplosionSize() {
+    return this->numExplosionCells;
+}
+
+void BombHandler::clearExplosion() {
+    this->exploded = false;
+    this->numExplosionCells = 0;
 }
