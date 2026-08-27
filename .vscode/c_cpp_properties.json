@@ -4,7 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/MinGW/include/**"
+                "C:/MinGW/include/**",
+                "C:/MinGW/include/ncurses",
+                "C:/MinGW/include/ncursesw"
             ],
             "defines": [
                 "_DEBUG",

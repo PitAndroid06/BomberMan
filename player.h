@@ -22,19 +22,19 @@ class Player {
     bool mvleft(Map grid);
     bool mvright(Map grid);
     Map getmv(int ch, Map grid);
-    void display();
     bool iswall(Map grid, int y, int x);
     bool isdead();
-    void setdead(bool d);
     void invulnerability();
     void liveschange(int plusminus);
     int getXLoc();
     int getYLoc();
+    void resetPosition();
+    int getLives();
+    void updatePosition(int y, int x);
 
+  private:
     int lives;
-private:
     int yLoc, xLoc;
-    bool dead;
 };
 
 

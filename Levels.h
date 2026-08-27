@@ -11,11 +11,13 @@ class Lvl{
     Map map;
     Lvl* nextLvl;
     Lvl* precLvl;
+    int LvlNumber;
     void setNextLvl(Lvl* nextLvl);
-    void setPrecLvl(Lvl* nextLvl);
+    void setPrecLvl(Lvl* precLvl);
   public:
     Lvl();
     Lvl(Map map);
+    int getLvlNumber();
     Lvl* getNextLvl();
     Lvl* getPrecLvl();
     Map getMap();
@@ -23,6 +25,7 @@ class Lvl{
     void addLvl(Lvl* newLvl);
     bool isFirst();
     bool isLast();
+    void deleteLvl(bool deleteNext);
 };
 
 #endif // BOMBERMAN_LEVELS_H

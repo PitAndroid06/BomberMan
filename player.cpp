@@ -10,7 +10,11 @@ Player::Player(int y, int x)
     lives=3;
 }
 
-Player::Player(){}
+Player::Player(){
+    xLoc = 1;
+    yLoc = 1;
+    lives = 3;
+}
 
 bool Player::mvup(Map grid) {
     if (!iswall(grid, this->xLoc, this->yLoc - 1)){
@@ -85,24 +89,14 @@ bool Player::iswall(Map grid, int x, int y) {
 }
 
 bool Player::isdead() {
-    return dead;
+    return this->lives <= 0;
 }
 
-void Player::setdead(bool d) {
-    if (d && !invulnerable) {
-        dead= true;
-        liveschange(0);
-        invulnerable = true;
-        lastDamageTime = std::chrono::steady_clock::now();
-
-    }
-}
 void Player::invulnerability() {
     if (invulnerable) {
         auto now = std::chrono::steady_clock::now();
         if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastDamageTime).count() >= invulnerableTime) {
             invulnerable = false;
-            dead = false;
         }
     }
 }
@@ -112,6 +106,20 @@ void Player::liveschange(int plusminus) {
     if (plusminus==0){lives--;}
 }
 
-int Player::getXLoc(){return xLoc;}
+int Player::getXLoc() {return xLoc;}
 
 int Player::getYLoc(){return yLoc;}
+
+void Player::resetPosition() {
+    xLoc = 1;
+    yLoc = 1;
+}
+
+int Player::getLives() {
+    return lives;
+}
+
+void Player::updatePosition(int y, int x) {
+    yLoc = y;
+    xLoc = x;
+}

@@ -7,11 +7,14 @@
 #include "Player.h"
 #include "Bomb.h"
 #include "Item.h"
+#include "enemy1.h"
+#include "enemy2.h"
 using namespace std;
 
 enum codeEntities{breakableWall, solidWall, player, enemy1, enemy2, bonus1, bonus2, bombAnimation1, bombAnimation2, explosion, lives};
 
 const int CHARS_TO_DISPLAY = 11;
+const int MAX_ENEMIES = 10;
 
 struct Entity{
   codeEntities codeEntity;
@@ -26,8 +29,13 @@ class Game{
     Classifica classifica;
     Entity AllEntitiesChar[CHARS_TO_DISPLAY];
     Player pl;
+    Enemy* enemies[MAX_ENEMIES];
+    int currentEnemyCount = 0;
     int sizeGridX;
     int sizeGridY;
+    int start_x;
+    int start_y;
+    int score;
     BombHandler bombHandler;
     Item itemHandler;
 
@@ -56,6 +64,14 @@ class Game{
     bool isLoaded();
 
     void runTime();
+
+    void GameOver(const char* msg);
+
+    void startNewGame();
+
+    bool isLevelCompleted();
+
+    bool isLevelCleared();
 };
 
 #endif // BOMBERMAN_GAME_H

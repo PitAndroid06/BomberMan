@@ -35,8 +35,8 @@ void bullet::move() {
         if (iswall(xLoc,yLoc)||xLoc<=1||yLoc<=1||xLoc>=48||yLoc>=18) {deactivate();}
         else mvwaddch(curwin,yLoc,xLoc,'*');
 
-        if (p->getXLoc() == xLoc && p->getXLoc() == yLoc) {
-            p->setdead(true);
+        if (p->getXLoc() == xLoc && p->getYLoc() == yLoc) {
+            p->liveschange(0);
             deactivate();
         }
 }

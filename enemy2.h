@@ -2,43 +2,25 @@
 // Created by simone on 12/11/25.
 //
 
-#ifndef PLAYERENEMIES_ENEMY2_H
-#define PLAYERENEMIES_ENEMY2_H
+
 #define BU 20
-#include <ncurses.h>
+#include "Enemy.h"
 #include <chrono>
-
 #include "bullet.h"
-#include "Player.h"
-class enemy2 {
-public:
-    std::chrono::steady_clock::time_point lastBulletTime;
 
-    int yLoc, xLoc;
-    int k;
-    enemy2(WINDOW * win, int y, int x, char c,Player*p);
+class Enemy2 : public Enemy {
+  private:
+    int xPosPlayer;
+    int yPosPlayer;
+    bool bulletfired;
+    std::chrono::steady_clock::time_point lastBulletTime;
     bullet*b[BU];
-    Player*p;
-    void mvup();
-    void mvdown();
-    void mvleft();
-    void mvright();
-    int getmv(int choice);
-    void display();
-    bool iswall(int y, int x);
-    bool isdead();
-    void setdead(bool d);
     bool wallbetween(Player*p);
     bool seePlayer(Player*p);
     int wherePlayer(Player*p);
     void firebullet(Player*p);
-private:
-    WINDOW *curwin;
-    int yMax, xMax;
-    char character;
-    bool dead,bulletfired;
+  public:
+    Enemy2(int y, int x, int xPosPlayer, int yPosPlayer);
+
+    int choosePath() override;
 };
-
-
-
-#endif //PLAYERENEMIES_ENEMY2_H
