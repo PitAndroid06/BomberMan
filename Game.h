@@ -3,10 +3,12 @@
 
 #include <ncurses.h>
 #include <iostream>
+#include <string>
 #include "Classifica.h"
 #include "Player.h"
 #include "Bomb.h"
 #include "Item.h"
+#include "Time.h"
 #include "enemy1.h"
 #include "enemy2.h"
 using namespace std;
@@ -38,6 +40,7 @@ class Game{
     int score;
     BombHandler bombHandler;
     Item itemHandler;
+    Time timeHandler;
 
     void printEntity(codeEntities c);
     const char* getEntityChar(codeEntities c);

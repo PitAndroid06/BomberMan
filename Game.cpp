@@ -275,6 +275,12 @@ void Game::drawLevel(){
   wmove(this->win, this->sizeGridY, (this->sizeGridX/2)-4);
   string levelStr = "Level " + to_string(this->current_lvl->getLvlNumber());
   wprintw(this->win, "%s", levelStr.c_str());
+
+  // Stampa tempo iniziale
+  wmove(this->win, this->sizeGridY, this->sizeGridX - 12);
+  string timeStr = "Time: " + to_string(this->timeHandler.getRemainingTime()) + "  ";
+  wprintw(this->win, "%s", timeStr.c_str());
+
   refresh();
 }
 
@@ -388,10 +394,15 @@ void Game::runTime(){
             if(this->goToNextLevel()){
               if(isCleared){
                 this->current_lvl->deleteLvl(false);
+                this->score += this->timeHandler.getRemainingTime(); // Bonus tempo
               }
+              this->timeHandler.start(200); // Riavvia timer
               this->pl.resetPosition();
               this->drawLevel();
             } else {
+              if (isCleared) {
+                this->score += this->timeHandler.getRemainingTime(); // Bonus tempo
+              }
               this->GameOver("YOU WON!");
               break;
             }
@@ -400,6 +411,7 @@ void Game::runTime(){
               if(isCleared){
                   this->current_lvl->deleteLvl(true);
                 }
+              this->timeHandler.start(200); // Riavvia timer
               this->pl.resetPosition();
               this->drawLevel();
             }
@@ -523,10 +535,10 @@ void Game::runTime(){
     }
 
     // Disegna bomba se attiva
-    bomb* b = this->bombHandler.getBomb();
-    if (b != nullptr) {
-      wmove(this->win, b->y, b->x);
-      if (b->timer > 100) {
+    bomb b = this->bombHandler.getBomb();
+    if (b.isActive) {
+      wmove(this->win, b.y, b.x);
+      if (b.timer > 100) {
         printEntity(codeEntities::bombAnimation1);
       } else {
         printEntity(codeEntities::bombAnimation2);
@@ -544,6 +556,18 @@ void Game::runTime(){
       this->GameOver("GAME OVER!");
       break;
     }
+    
+    // Game over: tempo scaduto
+    if (this->timeHandler.isTimeUp()) {
+      this->GameOver("TEMPO SCADUTO!");
+      break;
+    }
+
+    // Aggiorna a schermo il tempo rimasto
+    wmove(this->win, this->sizeGridY, this->sizeGridX - 12);
+    string timeStr = "Time: " + to_string(this->timeHandler.getRemainingTime()) + "  ";
+    wprintw(this->win, "%s", timeStr.c_str());
+
     wrefresh(this->win);
     napms(10); // ~100 FPS
   }
@@ -581,6 +605,7 @@ void Game::startNewGame() {
   if(!this->isLoaded()) return;
   this->pl = Player();
   this->score = 0;
+  this->timeHandler.start(200); // Inizia timer (200 secondi a livello)
   this->drawLevel();
   this->runTime();
 }

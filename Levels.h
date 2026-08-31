@@ -25,7 +25,7 @@ class Lvl{
     void addLvl(Lvl* newLvl);
     bool isFirst();
     bool isLast();
-    void deleteLvl(bool deleteNext);
+    void deleteLvl(bool deleteNext = true);
 };
 
 #endif // BOMBERMAN_LEVELS_H

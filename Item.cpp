@@ -2,9 +2,9 @@
 #include <cstdlib> // per rand()
 
 Item::Item() {
-    this->powerupTimer = 0;
+    powerupTimer = 0;
     // 100 frame corrispondono a ~10 secondi se il game loop gira a 10 FPS (napms(100))
-    this->durationFrames = 100; 
+    durationFrames = 100; 
 }
 
 void Item::tryDropItem(Map map, int x, int y) {
@@ -15,22 +15,22 @@ void Item::tryDropItem(Map map, int x, int y) {
 }
 
 void Item::collect() {
-    this->powerupTimer = this->durationFrames; // Resetta il timer al massimo
+    powerupTimer = durationFrames; // Resetta il timer al massimo
 }
 
 void Item::update() {
-    if (this->powerupTimer > 0) {
-        this->powerupTimer--; // Il tempo passa
+    if (powerupTimer > 0) {
+        powerupTimer--; // Il tempo passa
     }
 }
 
 int Item::getBombRadius() {
-    if (this->powerupTimer > 0) {
+    if (powerupTimer > 0) {
         return 3; // Raggio potenziato
     }
     return 1;     // Raggio normale
 }
 
 bool Item::isActive() {
-    return this->powerupTimer > 0;
+    return powerupTimer > 0;
 }

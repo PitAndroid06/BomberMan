@@ -7,6 +7,7 @@ struct bomb {
     int x, y;       // x = colonna, y = riga
     int timer;       // turni rimanenti prima dell'esplosione
     int raggio;      // celle raggiunte in ogni direzione
+    bool isActive;   // true se la bomba è piazzata
 };
 
 // Coordinate di una cella colpita dall'esplosione
@@ -19,7 +20,7 @@ const int MAX_EXPLOSION_CELLS = 41;
 
 class BombHandler {
 private:
-    bomb* activeBomb;
+    bomb activeBomb;
     int gridW, gridH;
 
     // Celle colpite dall'ultima esplosione (per Game)
@@ -29,13 +30,12 @@ private:
 
 public:
     BombHandler(int gridWidth, int gridHeight);
-    ~BombHandler();
 
     bool placeBomb(int x, int y, int raggio, int timer = 5);
     void update(Map map);
     void explode(Map map);
 
-    bomb* getBomb();
+    bomb getBomb();
 
     // Game usa questi per sapere cosa è stato colpito
     bool hasExploded();

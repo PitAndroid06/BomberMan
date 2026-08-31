@@ -2,55 +2,51 @@
 #include <cstdlib>
 
 BombHandler::BombHandler(int gridWidth, int gridHeight) {
-    this->activeBomb = nullptr;
-    this->gridW = gridWidth;
-    this->gridH = gridHeight;
-    this->numExplosionCells = 0;
-    this->exploded = false;
-}
-
-BombHandler::~BombHandler() {
-    if (this->activeBomb != nullptr) {
-        delete this->activeBomb;
-        this->activeBomb = nullptr;
-    }
+    activeBomb.isActive = false;
+    gridW = gridWidth;
+    gridH = gridHeight;
+    numExplosionCells = 0;
+    exploded = false;
 }
 
 bool BombHandler::placeBomb(int x, int y, int raggio, int timer) {
     // Una sola bomba attiva alla volta
-    if (this->activeBomb != nullptr) {
+    if (activeBomb.isActive) {
         return false;
     }
 
-    this->activeBomb = new bomb{x, y, timer, raggio};
+    activeBomb.x = x;
+    activeBomb.y = y;
+    activeBomb.timer = timer;
+    activeBomb.raggio = raggio;
+    activeBomb.isActive = true;
     return true;
 }
 
 void BombHandler::update(Map map) {
-    if (this->activeBomb == nullptr) return;
+    if (!activeBomb.isActive) return;
 
-    this->activeBomb->timer--;
+    activeBomb.timer--;
 
-    if (this->activeBomb->timer <= 0) {
-        this->explode(map);
-        delete this->activeBomb;
-        this->activeBomb = nullptr;
+    if (activeBomb.timer <= 0) {
+        explode(map);
+        activeBomb.isActive = false; // "Distrugge" la bomba
     }
 }
 
 void BombHandler::explode(Map map) {
-    if (this->activeBomb == nullptr) return;
+    if (!activeBomb.isActive) return;
 
-    int bx = this->activeBomb->x;
-    int by = this->activeBomb->y;
-    int r = this->activeBomb->raggio;
+    int bx = activeBomb.x;
+    int by = activeBomb.y;
+    int r = activeBomb.raggio;
 
     // Reset dati esplosione precedente
-    this->numExplosionCells = 0;
-    this->exploded = true;
+    numExplosionCells = 0;
+    exploded = true;
 
     // Il centro dell'esplosione (dove stava la bomba)
-    this->explosionCells[this->numExplosionCells++] = {bx, by};
+    explosionCells[numExplosionCells++] = {bx, by};
 
     // 4 direzioni: su, giù, destra, sinistra
     int dx[] = {0, 0, 1, -1};
@@ -62,7 +58,7 @@ void BombHandler::explode(Map map) {
             int ny = by + dy[dir] * step;
 
             // Controllo limiti matrice — FONDAMENTALE per evitare crash
-            if (nx < 0 || nx >= this->gridW || ny < 0 || ny >= this->gridH) {
+            if (nx < 0 || nx >= gridW || ny < 0 || ny >= gridH) {
                 break;
             }
 
@@ -72,12 +68,11 @@ void BombHandler::explode(Map map) {
             }
 
             // Registra cella come colpita dall'esplosione
-            if (this->numExplosionCells < MAX_EXPLOSION_CELLS) {
-                this->explosionCells[this->numExplosionCells++] = {nx, ny};
+            if (numExplosionCells < MAX_EXPLOSION_CELLS) {
+                explosionCells[numExplosionCells++] = {nx, ny};
             }
 
             // Muro distruttibile: distruggi nella mappa e fermati
-            // (l'esplosione non attraversa un muro appena distrutto)
             if (map[ny][nx] == '0') {
                 if (rand() % 100 < 30) {
                     map[ny][nx] = '5'; // Drop item
@@ -90,23 +85,23 @@ void BombHandler::explode(Map map) {
     }
 }
 
-bomb* BombHandler::getBomb() {
-    return this->activeBomb;
+bomb BombHandler::getBomb() {
+    return activeBomb;
 }
 
 bool BombHandler::hasExploded() {
-    return this->exploded;
+    return exploded;
 }
 
 ExplosionCell* BombHandler::getExplosionCells() {
-    return this->explosionCells;
+    return explosionCells;
 }
 
 int BombHandler::getExplosionSize() {
-    return this->numExplosionCells;
+    return numExplosionCells;
 }
 
 void BombHandler::clearExplosion() {
-    this->exploded = false;
-    this->numExplosionCells = 0;
+    exploded = false;
+    numExplosionCells = 0;
 }

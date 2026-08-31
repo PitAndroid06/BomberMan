@@ -55,7 +55,7 @@ void Lvl::updateMap(Map map){
   this->map = map;
 }
 
-void Lvl::deleteLvl(bool deleteNext = true) {
+void Lvl::deleteLvl(bool deleteNext) {
   if(deleteNext && !this->isLast()) {
     Lvl* temp = this->nextLvl;
     this->nextLvl = this->nextLvl->getNextLvl();
