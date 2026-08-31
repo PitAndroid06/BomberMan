@@ -201,7 +201,24 @@ void Game::saveClassifica(string file){
 
 void Game::drawLevel(){
   Map m = this->current_lvl->getMap();
+  bool drawedPlayer = false;
   this->currentEnemyCount = 0;
+
+  //Disegna eventuali vie laterali
+  if(!this->current_lvl->isFirst()){
+    if(m[10][0] == '1'){
+      m[10][0] = ' ';
+      this->current_lvl->updateMap(m);
+    }
+    this->drawBackGateway(true);
+  } else {
+    m[10][0] = '1';
+    this->current_lvl->updateMap(m);
+    this->drawBackGateway(false);
+  }
+  this->drawNextGateway(this->isLevelCompleted());
+
+  //Disegna tutto il livello
   for(int i = 0; i < this->sizeGridY; i++){
     for(int j = 0; j < this->sizeGridX; j++){
       wmove(this->win, i, j);
@@ -217,6 +234,7 @@ void Game::drawLevel(){
           case codeEntities::player:
             printEntity(codeEntities::player);
             this->pl.updatePosition(i, j);
+            drawedPlayer = true;
             break;
           case codeEntities::enemy1:
             //init_enemy1
@@ -237,41 +255,28 @@ void Game::drawLevel(){
           case codeEntities::bonus1:
             printEntity(codeEntities::bonus1);
             break;
+          case codeEntities::bonus2:
+            printEntity(codeEntities::bonus2);
+            break;
           default: break;
         }
       }
     }
   }
   
-  if(!this->current_lvl->isFirst()){
-    if(m[10][0] == '1'){
-      m[10][0] = ' ';
-      this->current_lvl->updateMap(m);
-      wmove(this->win, 10, 0);
-      wprintw(this->win, "%s", " ");
-    }
-    mvprintw(start_y+9, start_x-1, "%s", this->getEntityChar(codeEntities::solidWall));
-    mvprintw(start_y+11, start_x-1, "%s", this->getEntityChar(codeEntities::solidWall));
-  } else {
-    m[10][0] = '1';
-    this->current_lvl->updateMap(m);
-    mvprintw(start_y+10, start_x, "%s", this->getEntityChar(codeEntities::solidWall));
-    mvprintw(start_y+9, start_x-1, " ");
-    mvprintw(start_y+11, start_x-1, " ");
+  //Disegna eventualmente il giocatore
+  if(!drawedPlayer){
+    wmove(this->win, this->pl.getYLoc(), this->pl.getXLoc());
+    printEntity(codeEntities::player);
   }
-  if(this->isLevelCompleted()){
-    mvprintw(start_y+9, start_x+40, "%s", this->getEntityChar(codeEntities::solidWall));
-    mvprintw(start_y+11, start_x+40, "%s", this->getEntityChar(codeEntities::solidWall));
-  } else {
-    mvprintw(start_y+9, start_x+40, "%s", " ");
-    mvprintw(start_y+11, start_x+40, "%s", " ");
-  }
-
-  //n_lives
+  
+  //Disegna le vite
   wmove(this->win, this->sizeGridY, 1);
-  for(int i = 0; i < 3; i++){
+  for(int i = 0; i < this->pl.getLives(); i++){
     this->printEntity(codeEntities::lives);
   }
+
+  //Disegna il numero del livello
   wmove(this->win, this->sizeGridY, (this->sizeGridX/2)-4);
   string levelStr = "Level " + to_string(this->current_lvl->getLvlNumber());
   wprintw(this->win, "%s", levelStr.c_str());
@@ -380,11 +385,14 @@ void Game::runTime(){
         else if (ch == 'a') nextX--;
         else if (ch == 'd') nextX++;
         
-        // Controlla se il giocatore sta per raccogliere un item ('5' = bonus1)
+        // Controlla se il giocatore sta per raccogliere un item ('5' = bonus1, 6 = bonus2)
         if (nextY >= 0 && nextY < this->sizeGridY && nextX >= 0 && nextX < this->sizeGridX) {
-            if (this->current_lvl->getMap()[nextY][nextX] == '5') {
-                this->itemHandler.collect();
-            }
+          if (this->current_lvl->getMap()[nextY][nextX] == '5') {
+            this->itemHandler.collect();
+          } else if (this->current_lvl->getMap()[nextY][nextX] == '6') {
+            this->pl.liveschange(1);
+            updateLives();
+          }
         }
         
         //Go to the next level if the player reaches the exit point (40, 10)
@@ -409,8 +417,8 @@ void Game::runTime(){
           } else if(nextX == -1){
             if(this->goToPrecLevel()){
               if(isCleared){
-                  this->current_lvl->deleteLvl(true);
-                }
+                this->current_lvl->deleteLvl(true);
+              }
               this->timeHandler.start(200); // Riavvia timer
               this->pl.resetPosition();
               this->drawLevel();
@@ -424,12 +432,7 @@ void Game::runTime(){
               this->pl.liveschange(0);
               this->pl.resetPosition();
               collision = true;
-              wmove(this->win, this->sizeGridY, 1);
-              wprintw(this->win, "        ");
-              wmove(this->win, this->sizeGridY, 1);
-              for (int i = 0; i < this->pl.getLives(); i++) {
-                printEntity(codeEntities::lives);
-              }
+              updateLives();
               break;
             }
           }
@@ -449,96 +452,111 @@ void Game::runTime(){
         }
       }
 
-      switch(ch){
-        case ' ':
-          this->bombHandler.placeBomb(this->pl.getXLoc(), this->pl.getYLoc(), this->itemHandler.getBombRadius(), 200);
-          break;
-        case 'e':
-          //use cure
-          break;
-        default: break;
+      //Piazza la bomba
+      if(ch == ' '){
+        this->bombHandler.placeBomb(this->pl.getXLoc(), this->pl.getYLoc(), this->itemHandler.getBombRadius(), 200);
       }
     }
-    // Aggiorna bomba e item
+    // Aggiorna item
     this->itemHandler.update();
-    this->bombHandler.update(this->current_lvl->getMap());
 
-    // Gestisci esplosione
-    if (this->bombHandler.hasExploded()) {
-      ExplosionCell* cells = this->bombHandler.getExplosionCells();
+    // Aggiorna bomba e gestisci esplosioni
+    if(this->bombHandler.update(this->current_lvl->getMap())) {
+
+      ExplodedCell* cells = this->bombHandler.getExplodedCells();
       int size = this->bombHandler.getExplosionSize();
+      
+      //La bomba è esplosa
+      if(this->bombHandler.isBombActive()){
 
-      // Controlla se il giocatore è stato colpito
-      for (int i = 0; i < size; i++) {
-        if (cells[i].x == this->pl.getXLoc() && cells[i].y == this->pl.getYLoc()) {
-          this->pl.liveschange(0);
-          this->pl.resetPosition();
-          break; // colpito una sola volta per esplosione
+        Map update = this->current_lvl->getMap();
+
+        for (int i = 0; i < size; i++) {
+        
+          // Controlla se il giocatore è stato colpito
+          if (cells[i].x == this->pl.getXLoc() && cells[i].y == this->pl.getYLoc()) {
+            this->pl.liveschange(0);
+            update[this->pl.getYLoc()][this->pl.getXLoc()] = ' ';
+            this->pl.resetPosition();
+            update[this->pl.getYLoc()][this->pl.getXLoc()] = '2';
+            updateLives();
+          }
+        
+          // Controlla se un nemico è stato colpito
+          for(int j = 0; j < this->currentEnemyCount; j++){
+            if(cells[i].x == this->enemies[j]->getXLoc() && cells[i].y == this->enemies[j]->getYLoc()){
+              delete this->enemies[j];
+              for(int k = j; k < this->currentEnemyCount-1; k++){
+                this->enemies[k] = this->enemies[k+1];
+              }
+              this->currentEnemyCount--;
+
+              update[cells[i].y][cells[i].x] = ' ';
+              this->score += 5;
+              if(currentEnemyCount == 0){
+                update[10][39] = ' '; // Rimuovi il muro che blocca l'uscita
+                this->drawNextGateway(true);
+              }
+              break;
+            }
+          }
+
+          //Controlla se la cella colpita è una parete distruttibile
+          if(update[cells[i].y][cells[i].x] == '0'){
+            int chance = rand() % 100;
+            if (chance < DROP_CHANCE) {
+              if(rand() % 2 == 0)update[cells[i].y][cells[i].x] = '5'; // Drop powerup
+              else update[cells[i].y][cells[i].x] = '6'; // Drop cure
+            } else {
+              update[cells[i].y][cells[i].x] = ' '; // Solo distruzione
+            }
+          }
+
+          // Disegna esplosione a schermo
+          wmove(this->win, cells[i].y, cells[i].x);
+          printEntity(codeEntities::explosion);
         }
 
-        // Controlla se un nemico è stato colpito
-        for(int j = 0; j < this->currentEnemyCount; j++){
-          if(cells[i].x == this->enemies[j]->getXLoc() && cells[i].y == this->enemies[j]->getYLoc()){
-            delete this->enemies[j];
-            for(int k = j; k < this->currentEnemyCount-1; k++){
-              this->enemies[k] = this->enemies[k+1];
-            }
-            this->currentEnemyCount--;
-            Map update = this->current_lvl->getMap();
-            update[cells[i].y][cells[i].x] = ' ';
-            this->current_lvl->updateMap(update);
-            this->score += 5;
-            if(currentEnemyCount == 0){
-              Map update = this->current_lvl->getMap();
-              update[10][39] = ' '; // Rimuovi il muro che blocca l'uscita
-              this->current_lvl->updateMap(update);
-              wmove(this->win, 9, 40);
-              printEntity(codeEntities::solidWall); // Disegna l'uscita
-              wmove(this->win, 10, 39);
+        this->current_lvl->updateMap(update);
+        wrefresh(this->win);
+      }
+      // La bomba ha finito il tempo di animazione dell'esplosione
+      else {
+
+        const Map lvl = this->current_lvl->getMap();
+
+        // Pulisci celle dell'esplosione
+        for (int i = 0; i < size; i++) {
+          wmove(this->win, cells[i].y, cells[i].x);
+          switch(lvl[cells[i].y][cells[i].x]){
+            case codeEntities::bonus1+48:
+              printEntity(codeEntities::bonus1);
+              break;
+            case codeEntities::bonus2+48:
+              printEntity(codeEntities::bonus2);
+              break;
+            case ' ':
               wprintw(this->win, " ");
-              wmove(this->win, 11, 40);
-              printEntity(codeEntities::solidWall); // Disegna l'uscita
-            }
-            break;
+              break;
+            default: break;
           }
         }
+        
+        if(!this->pl.isdead()){
+          wmove(this->win, this->pl.getYLoc(), this->pl.getXLoc());
+          printEntity(codeEntities::player);
+        }
+        wrefresh(this->win);
+        this->bombHandler.clearExplosion();
       }
-
-      // Disegna esplosione a schermo
-      for (int i = 0; i < size; i++) {
-        wmove(this->win, cells[i].y, cells[i].x);
-        printEntity(codeEntities::explosion);
-      }
-      wrefresh(this->win);
-      napms(500); // mostra esplosione per mezzo secondo
-
-      // Pulisci celle dell'esplosione
-      for (int i = 0; i < size; i++) {
-        wmove(this->win, cells[i].y, cells[i].x);
-        wprintw(this->win, " ");
-      }
-      // Ridisegna il giocatore (potrebbe essere su una cella colpita)
-      if(!this->pl.isdead()){
-        wmove(this->win, this->pl.getYLoc(), this->pl.getXLoc());
-        printEntity(codeEntities::player);
-      }
-
-      // Aggiorna display vite
-      wmove(this->win, this->sizeGridY, 1);
-      wprintw(this->win, "        ");
-      wmove(this->win, this->sizeGridY, 1);
-      for (int i = 0; i < this->pl.getLives(); i++) {
-        printEntity(codeEntities::lives);
-      }
-
-      this->bombHandler.clearExplosion();
+      
     }
 
     // Disegna bomba se attiva
     bomb b = this->bombHandler.getBomb();
-    if (b.isActive) {
+    if (b.isActive && !this->bombHandler.hasExploded()) {
       wmove(this->win, b.y, b.x);
-      if (b.timer > 100) {
+      if (b.timer % 50 < 25) {
         printEntity(codeEntities::bombAnimation1);
       } else {
         printEntity(codeEntities::bombAnimation2);
@@ -559,14 +577,13 @@ void Game::runTime(){
     
     // Game over: tempo scaduto
     if (this->timeHandler.isTimeUp()) {
-      this->GameOver("TEMPO SCADUTO!");
+      this->GameOver("TIME OUT!");
       break;
     }
 
     // Aggiorna a schermo il tempo rimasto
     wmove(this->win, this->sizeGridY, this->sizeGridX - 12);
-    string timeStr = "Time: " + to_string(this->timeHandler.getRemainingTime()) + "  ";
-    wprintw(this->win, "%s", timeStr.c_str());
+    wprintw(this->win, "%s", ("Time: " + to_string(this->timeHandler.getRemainingTime()) + "  ").c_str());
 
     wrefresh(this->win);
     napms(10); // ~100 FPS
@@ -632,4 +649,42 @@ bool Game::isLevelCleared(){
     }
   }
   return true;
+}
+
+void Game::updateLives(){
+  wmove(this->win, this->sizeGridY, 1);
+  wprintw(this->win, "        ");
+  wmove(this->win, this->sizeGridY, 1);
+  for (int i = 0; i < this->pl.getLives(); i++) {
+    printEntity(codeEntities::lives);
+  }
+}
+
+void Game::drawNextGateway(bool open){
+  if(open){
+    wmove(this->win, 9, 40);
+    printEntity(codeEntities::solidWall); // Disegna l'uscita
+    wmove(this->win, 10, 39);
+    wprintw(this->win, " ");
+    wmove(this->win, 11, 40);
+    printEntity(codeEntities::solidWall); // Disegna l'uscita
+  } else {
+    mvprintw(start_y+9, start_x+40, "%s", " ");
+    mvprintw(start_y+11, start_x+40, "%s", " ");
+    wmove(this->win, 10, 39);
+    printEntity(codeEntities::solidWall);
+  }
+}
+
+void Game::drawBackGateway(bool open){
+  if(open){
+    wmove(this->win, 10, 0);
+    wprintw(this->win, "%s", " ");
+    mvprintw(start_y+9, start_x-1, "%s", this->getEntityChar(codeEntities::solidWall));
+    mvprintw(start_y+11, start_x-1, "%s", this->getEntityChar(codeEntities::solidWall));
+  } else {
+    mvprintw(start_y+10, start_x, "%s", this->getEntityChar(codeEntities::solidWall));
+    mvprintw(start_y+9, start_x-1, " ");
+    mvprintw(start_y+11, start_x-1, " ");
+  }
 }

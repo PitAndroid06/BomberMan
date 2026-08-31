@@ -69,3 +69,11 @@ void Lvl::deleteLvl(bool deleteNext) {
     delete temp;
   }
 }
+
+int Lvl::getTimeCompletion() {
+  return this->timeCompletion;
+}
+
+void Lvl::setTimeCompletion(int time) {
+  this->timeCompletion = time;
+}

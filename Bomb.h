@@ -11,7 +11,7 @@ struct bomb {
 };
 
 // Coordinate di una cella colpita dall'esplosione
-struct ExplosionCell {
+struct ExplodedCell {
     int x, y;
 };
 
@@ -24,7 +24,7 @@ private:
     int gridW, gridH;
 
     // Celle colpite dall'ultima esplosione (per Game)
-    ExplosionCell explosionCells[MAX_EXPLOSION_CELLS];
+    ExplodedCell explosionCells[MAX_EXPLOSION_CELLS];
     int numExplosionCells;
     bool exploded;
 
@@ -32,16 +32,17 @@ public:
     BombHandler(int gridWidth, int gridHeight);
 
     bool placeBomb(int x, int y, int raggio, int timer = 5);
-    void update(Map map);
+    bool update(Map map);
     void explode(Map map);
 
     bomb getBomb();
 
     // Game usa questi per sapere cosa è stato colpito
     bool hasExploded();
-    ExplosionCell* getExplosionCells();
+    ExplodedCell* getExplodedCells();
     int getExplosionSize();
     void clearExplosion();
+    bool isBombActive();
 };
 
 #endif // BOMBERMAN_BOMB_H

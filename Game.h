@@ -17,6 +17,7 @@ enum codeEntities{breakableWall, solidWall, player, enemy1, enemy2, bonus1, bonu
 
 const int CHARS_TO_DISPLAY = 11;
 const int MAX_ENEMIES = 10;
+const int DROP_CHANCE = 30;
 
 struct Entity{
   codeEntities codeEntity;
@@ -75,6 +76,11 @@ class Game{
     bool isLevelCompleted();
 
     bool isLevelCleared();
+
+    void updateLives();
+
+    void drawNextGateway(bool open);
+    void drawBackGateway(bool open);
 };
 
 #endif // BOMBERMAN_GAME_H

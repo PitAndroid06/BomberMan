@@ -7,6 +7,8 @@ class Time {
 private:
     time_t startTime; // Il momento (in secondi) in cui inizia il livello
     int timeLimit;    // Quanti secondi hai a disposizione (es. 120)
+    bool isRunning = true;   // Indica se il timer è attivo
+    bool timeOut = false;
 
 public:
     Time();

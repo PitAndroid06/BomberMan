@@ -1,3 +1,6 @@
+Pietro, 274
+Besce, 30
+Besce, 30
 Pietro, 20
 Pietro, 15
 Pietro, 12
@@ -7,9 +10,11 @@ Pietro, 9
 Pietro, 8
 Pietro, 7
 Pietro, 6
+Besce, 5
 Pietro, 5
 Pietro, 3
-Besce, 0
 q, 0
-Pietro, 0
 Besce, 0
+Besce, 0
+Pietro, 0
+Pietro, 0

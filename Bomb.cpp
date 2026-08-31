@@ -23,18 +23,26 @@ bool BombHandler::placeBomb(int x, int y, int raggio, int timer) {
     return true;
 }
 
-void BombHandler::update(Map map) {
-    if (!activeBomb.isActive) return;
+//Returns true if the bomb has exploded or has finished its animation, false otherwise
+bool BombHandler::update(const Map map) {
+    if (!activeBomb.isActive) return false;
 
     activeBomb.timer--;
 
     if (activeBomb.timer <= 0) {
-        explode(map);
-        activeBomb.isActive = false; // "Distrugge" la bomba
+        if(!exploded) {
+            explode(map);
+            activeBomb.timer = 50;
+            return true;
+        } else {
+            activeBomb.isActive = false;
+            return true;
+        }
     }
+    return false;
 }
 
-void BombHandler::explode(Map map) {
+void BombHandler::explode(const Map map) {
     if (!activeBomb.isActive) return;
 
     int bx = activeBomb.x;
@@ -71,16 +79,6 @@ void BombHandler::explode(Map map) {
             if (numExplosionCells < MAX_EXPLOSION_CELLS) {
                 explosionCells[numExplosionCells++] = {nx, ny};
             }
-
-            // Muro distruttibile: distruggi nella mappa e fermati
-            if (map[ny][nx] == '0') {
-                if (rand() % 100 < 30) {
-                    map[ny][nx] = '5'; // Drop item
-                } else {
-                    map[ny][nx] = ' '; // Solo distruzione
-                }
-                break;
-            }
         }
     }
 }
@@ -93,7 +91,7 @@ bool BombHandler::hasExploded() {
     return exploded;
 }
 
-ExplosionCell* BombHandler::getExplosionCells() {
+ExplodedCell* BombHandler::getExplodedCells() {
     return explosionCells;
 }
 
@@ -104,4 +102,8 @@ int BombHandler::getExplosionSize() {
 void BombHandler::clearExplosion() {
     exploded = false;
     numExplosionCells = 0;
+}
+
+bool BombHandler::isBombActive() {
+    return activeBomb.isActive;
 }

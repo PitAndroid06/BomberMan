@@ -21,7 +21,8 @@ int Time::getRemainingTime() {
     int remaining = timeLimit - passedSeconds;
     
     // Non andiamo sotto zero
-    if (remaining < 0) {
+    if (remaining <= 0) {
+        timeOut = true;
         return 0;
     }
     
@@ -29,5 +30,5 @@ int Time::getRemainingTime() {
 }
 
 bool Time::isTimeUp() {
-    return getRemainingTime() <= 0;
+    return timeOut;
 }
