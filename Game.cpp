@@ -390,8 +390,10 @@ void Game::runTime(){
           if (this->current_lvl->getMap()[nextY][nextX] == '5') {
             this->itemHandler.collect();
           } else if (this->current_lvl->getMap()[nextY][nextX] == '6') {
-            this->pl.liveschange(1);
-            updateLives();
+            if(this->pl.getLives() < 3){
+              this->pl.liveschange(1);
+              updateLives();
+            }
           }
         }
         
@@ -402,18 +404,15 @@ void Game::runTime(){
             if(this->goToNextLevel()){
               if(isCleared){
                 this->current_lvl->deleteLvl(false);
-                this->score += this->timeHandler.getRemainingTime(); // Bonus tempo
               }
               if(!this->current_lvl->getTimerInitialize()){
                 this->current_lvl->setTimerInitialize(true);
-                this->timeHandler.start(200); // Riavvia timer
+                this->timeHandler.start(200 + this->timeHandler.getRemainingTime()); // Riavvia timer
               }
               this->pl.resetPosition();
               this->drawLevel();
             } else {
-              if (isCleared) {
-                this->score += this->timeHandler.getRemainingTime(); // Bonus tempo
-              }
+              this->score += this->timeHandler.getRemainingTime(); // Bonus tempo
               this->GameOver("YOU WON!");
               break;
             }
@@ -494,7 +493,7 @@ void Game::runTime(){
               this->currentEnemyCount--;
 
               update[cells[i].y][cells[i].x] = ' ';
-              this->score += 5;
+              this->score += 75;
               if(currentEnemyCount == 0){
                 update[10][39] = ' '; // Rimuovi il muro che blocca l'uscita
                 this->drawNextGateway(true);
@@ -512,6 +511,7 @@ void Game::runTime(){
             } else {
               update[cells[i].y][cells[i].x] = ' '; // Solo distruzione
             }
+            this->score += 10;
           }
 
           // Disegna esplosione a schermo
@@ -624,7 +624,7 @@ void Game::startNewGame() {
   if(!this->isLoaded()) return;
   this->pl = Player();
   this->score = 0;
-  this->current_level->setTimerInitialize(true);
+  this->current_lvl->setTimerInitialize(true);
   this->timeHandler.start(200); // Inizia timer (200 secondi a livello)
   this->drawLevel();
   this->runTime();
