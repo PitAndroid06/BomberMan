@@ -70,10 +70,10 @@ void Lvl::deleteLvl(bool deleteNext) {
   }
 }
 
-int Lvl::getTimeCompletion() {
-  return this->timeCompletion;
+bool Lvl::getTimerInitialize() {
+  return this->timerInitialize;
 }
 
-void Lvl::setTimeCompletion(int time) {
-  this->timeCompletion = time;
+void Lvl::setTimerInitialize(bool time) {
+  this->timerInitialize = time;
 }

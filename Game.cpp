@@ -404,7 +404,10 @@ void Game::runTime(){
                 this->current_lvl->deleteLvl(false);
                 this->score += this->timeHandler.getRemainingTime(); // Bonus tempo
               }
-              this->timeHandler.start(200); // Riavvia timer
+              if(!this->current_lvl->getTimerInitialize()){
+                this->current_lvl->setTimerInitialize(true);
+                this->timeHandler.start(200); // Riavvia timer
+              }
               this->pl.resetPosition();
               this->drawLevel();
             } else {
@@ -419,7 +422,6 @@ void Game::runTime(){
               if(isCleared){
                 this->current_lvl->deleteLvl(true);
               }
-              this->timeHandler.start(200); // Riavvia timer
               this->pl.resetPosition();
               this->drawLevel();
             }
@@ -622,9 +624,11 @@ void Game::startNewGame() {
   if(!this->isLoaded()) return;
   this->pl = Player();
   this->score = 0;
+  this->current_level->setTimerInitialize(true);
   this->timeHandler.start(200); // Inizia timer (200 secondi a livello)
   this->drawLevel();
   this->runTime();
+  
 }
 
 bool Game::isLevelCompleted(){

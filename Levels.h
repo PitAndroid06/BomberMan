@@ -12,7 +12,7 @@ class Lvl{
     Lvl* nextLvl;
     Lvl* precLvl;
     int LvlNumber;
-    int timeCompletion = 200; // Tempo impiegato per completare il livello
+    bool timerInitialize = false; // Timer già partito per quel livello
     void setNextLvl(Lvl* nextLvl);
     void setPrecLvl(Lvl* precLvl);
   public:
@@ -22,8 +22,8 @@ class Lvl{
     Lvl* getNextLvl();
     Lvl* getPrecLvl();
     Map getMap();
-    int getTimeCompletion();
-    void setTimeCompletion(int time);
+    bool getTimerInitialize();
+    void setTimerInitialize(bool timer);
     void updateMap(Map map);
     void addLvl(Lvl* newLvl);
     bool isFirst();
