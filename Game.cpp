@@ -286,6 +286,11 @@ void Game::drawLevel(){
   string timeStr = "Time: " + to_string(this->timeHandler.getRemainingTime()) + "  ";
   wprintw(this->win, "%s", timeStr.c_str());
 
+  // Stampa score
+  wmove(this->win, this->sizeGridY, 1);
+  string scoreStr = "Score: " + to_string(this->score) + "  ";
+  wprintw(this->win, "%s", scoreStr.c_str());
+
   refresh();
 }
 
