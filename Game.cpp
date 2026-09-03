@@ -245,13 +245,27 @@ void Game::drawLevel(){
             }
             break;
           case codeEntities::enemy2:
-            //init_enemy2
-            if(this->currentEnemyCount < MAX_ENEMIES){
-              printEntity(codeEntities::enemy2);
-              enemies[this->currentEnemyCount] = new Enemy2(i, j, this->pl.getXLoc(), this->pl.getYLoc());
-              this->currentEnemyCount++;
-            }
-            break;
+
+    if(this->currentEnemyCount < MAX_ENEMIES) {
+
+        printEntity(codeEntities::enemy2);
+
+        Enemy2* enemy = new Enemy2(i, j);
+
+        enemy->initBullets(
+            this->current_lvl->getMap(),
+            &this->pl,
+            this->sizeGridX,
+            this->sizeGridY
+        );
+
+        this->enemies[this->currentEnemyCount] = enemy;
+
+        this->currentEnemyCount++;
+    }
+
+    break;
+
           case codeEntities::bonus1:
             printEntity(codeEntities::bonus1);
             break;
@@ -571,8 +585,129 @@ void Game::runTime(){
     }
 
     //move all enemies.
-    for (int i = 0; i < this->currentEnemyCount; i++) {
-      //Logica di movimento nemici (da implementare)
+
+
+time_t now = time(NULL);
+
+if(now - this->lastEnemyMoveTime >= ENEMY_MOVE_INTERVAL) {
+
+    Map map = this->current_lvl->getMap();
+
+    for(int i = 0; i < this->currentEnemyCount; i++) {
+        Enemy2* enemy2 =
+            dynamic_cast<Enemy2*>(this->enemies[i]);
+        if(enemy2 != nullptr) {
+
+            enemy2->firebullet(
+                &this->pl,
+                map
+            );
+
+            enemy2->updateBullets();
+        }
+
+        int oldX = this->enemies[i]->getXLoc();
+        int oldY = this->enemies[i]->getYLoc();
+
+        int direction =
+            this->enemies[i]->choosePath();
+
+        int newX = oldX;
+        int newY = oldY;
+
+        switch(direction) {
+
+            case 0:
+                newY--;
+                break;
+
+            case 1:
+                newY++;
+                break;
+
+            case 2:
+                newX--;
+                break;
+
+            case 3:
+                newX++;
+                break;
+        }
+        if(newY >= 0 &&
+           newY < this->sizeGridY &&
+           newX >= 0 &&
+           newX < this->sizeGridX) {
+            if(map[newY][newX] == ' ') {
+
+                map[oldY][oldX] = ' ';
+                if(enemy2 != nullptr) {
+                    map[newY][newX] = '4';
+                }
+                else {
+                    map[newY][newX] = '3';
+                }
+
+                this->enemies[i]->UpdateLocation(direction);
+                wmove(this->win, oldY, oldX);
+                wprintw(this->win, " ");
+                wmove(this->win, newY, newX);
+
+                if(enemy2 != nullptr) {
+                    printEntity(codeEntities::enemy2);
+                }
+                else {
+                    printEntity(codeEntities::enemy1);
+                }
+            }
+            else if(map[newY][newX] == '2') {
+
+                this->pl.liveschange(0);
+                this->updateLives();
+
+                map[oldY][oldX] = ' ';
+
+                int playerOldX = this->pl.getXLoc();
+                int playerOldY = this->pl.getYLoc();
+
+                this->pl.resetPosition();
+
+                map[playerOldY][playerOldX] = ' ';
+                map[this->pl.getYLoc()][this->pl.getXLoc()] = '2';
+                wmove(
+                    this->win,
+                    playerOldY,
+                    playerOldX
+                );
+
+                wprintw(this->win, " ");
+                wmove(
+                    this->win,
+                    this->pl.getYLoc(),
+                    this->pl.getXLoc()
+                );
+
+                printEntity(codeEntities::player);
+                wmove(
+                    this->win,
+                    oldY,
+                    oldX
+                );
+
+                if(enemy2 != nullptr) {
+                    printEntity(codeEntities::enemy2);
+                }
+                else {
+                    printEntity(codeEntities::enemy1);
+                }
+            }
+        }
+    }
+
+    this->current_lvl->updateMap(map);
+
+    this->lastEnemyMoveTime = now;
+}{
+      //Logica di movimento nemici
       // Controlla se il nemico ha colpito il giocatore
     }
 
@@ -631,6 +766,7 @@ void Game::startNewGame() {
   this->score = 0;
   this->current_lvl->setTimerInitialize(true);
   this->timeHandler.start(200); // Inizia timer (200 secondi a livello)
+  this->lastEnemyMoveTime = time(NULL);
   this->drawLevel();
   this->runTime();
   

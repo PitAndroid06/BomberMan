@@ -1,58 +1,87 @@
-//
-// Created by simone on 12/12/25.
-//
-
 #include "bullet.h"
-#include "player.h"
-bullet::bullet(WINDOW *win, int x, int y, int direction,Player*p) {
-    curwin=win;
-    xLoc=x;
-    yLoc=y;
-    this->direction=direction;
-    this ->p=p;
-    active=false;
+
+bullet::bullet(Map map,
+               int x,
+               int y,
+               int direction,
+               Player* p,
+               int width,
+               int height) {
+
+    this->map = map;
+    this->xLoc = x;
+    this->yLoc = y;
+    this->direction = direction;
+    this->p = p;
+
+    this->gridWidth = width;
+    this->gridHeight = height;
+
+    this->active = false;
 }
 
 void bullet::move() {
-        switch(direction) {
-            case 2:
-                mvwaddch(curwin,yLoc,xLoc,' ');
-                xLoc++;
-                break;
-            case 4:
-                mvwaddch(curwin,yLoc,xLoc,' ');
-                yLoc++;
-                break;
-            case 1:
-                mvwaddch(curwin,yLoc,xLoc,' ');
-                xLoc--;
-                break;
-            case 3:
-                mvwaddch(curwin,yLoc,xLoc,' ');
-                yLoc--;
-                break;
-        }
-        if (iswall(xLoc,yLoc)||xLoc<=1||yLoc<=1||xLoc>=48||yLoc>=18) {deactivate();}
-        else mvwaddch(curwin,yLoc,xLoc,'*');
 
-        if (p->getXLoc() == xLoc && p->getYLoc() == yLoc) {
-            p->liveschange(0);
-            deactivate();
+    switch (direction) {
+
+        case 0: // UP
+            yLoc--;
+            break;
+
+        case 1: // DOWN
+            yLoc++;
+            break;
+
+        case 2: // LEFT
+            xLoc--;
+            break;
+
+        case 3: // RIGHT
+            xLoc++;
+            break;
+    }
+    if (xLoc < 0 ||
+        xLoc >= gridWidth ||
+        yLoc < 0 ||
+        yLoc >= gridHeight) {
+
+        deactivate();
+        return;
+        }
+    if (iswall(xLoc, yLoc)) {
+        deactivate();
+        return;
+    }
+    if (p->getXLoc() == xLoc &&
+        p->getYLoc() == yLoc) {
+
+        p->liveschange(0);
+        deactivate();
         }
 }
-    bool bullet::iswall(int x, int y) {
-        char ch = mvwinch(curwin, y, x) & A_CHARTEXT;
-        return ch == '#';
-    }
-void bullet::activate(int x, int y, int direction) {
-    active=true;
-    xLoc=x;
-    yLoc=y;
-    this->direction=direction;
 
+bool bullet::iswall(int x, int y) {
 
+    if (x < 0 ||
+        x >= gridWidth ||
+        y < 0 ||
+        y >= gridHeight) {
+
+        return true;
+        }
+    return map[y][x] == '0' ||
+           map[y][x] == '1';
 }
-    void bullet::deactivate() {
-        active=false;
-        mvwaddch(curwin,yLoc,xLoc,' ');
-    }
+
+void bullet::activate(int x, int y, int dir) {
+
+    active = true;
+    xLoc = x;
+    yLoc = y;
+    direction = dir;
+}
+
+void bullet::deactivate() {
+
+    active = false;
+}

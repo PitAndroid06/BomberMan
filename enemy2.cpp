@@ -1,91 +1,175 @@
-//
-// Created by simone on 12/11/25.
-//
-
 #include "Enemy2.h"
 
-Enemy2::Enemy2(int y, int x, int xPosPlayer, int yPosPlayer) : Enemy(y, x) {
-    this->xPosPlayer = xPosPlayer;
-    this->yPosPlayer = yPosPlayer;
-    /*
-    lastBulletTime = std::chrono::steady_clock::now();
-    for (int i = 0; i< BU; i++) {
-        b[i]=new bullet(curwin,-1,-1,0,p);
+Enemy2::Enemy2(int y, int x)
+    : Enemy(y, x) {
+
+    lastBulletTime = 0;
+
+    for(int i = 0; i < BU; i++) {
+        b[i] = nullptr;
     }
-    */
+}
+
+Enemy2::~Enemy2() {
+
+    for(int i = 0; i < BU; i++) {
+        delete b[i];
+        b[i] = nullptr;
+    }
 }
 
 int Enemy2::choosePath() {
-    // Implement the logic for choosing a path for enemy2
-    return 0; // Placeholder return value
-}
-/*
-bool Enemy2::wallbetween(Player* p) {
-    bool wall = false;
 
-    if (yPosPlayer == yLoc) {
-        int minx = min(xLoc, xPosPlayer);
-        int maxx = max(xLoc, xPosPlayer);
-        for (int x = minx + 1; x < maxx; x++)
-            if ((mvwinch(curwin, yLoc, x) & A_CHARTEXT) == '#')
-                wall = true;
+    return rand() % 4;
+}
+
+bool Enemy2::seePlayer(Player* p) {
+
+    int playerX = p->getXLoc();
+    int playerY = p->getYLoc();
+
+    return playerX == getXLoc() ||
+           playerY == getYLoc();
+}
+
+int Enemy2::wherePlayer(Player* p) {
+
+    int playerX = p->getXLoc();
+    int playerY = p->getYLoc();
+
+    if (playerY == getYLoc() &&
+        playerX < getXLoc()) {
+
+        return 2; // LEFT
     }
-    else if (xPosPlayer == xLoc) {
-        int miny = min(yLoc, yPosPlayer);
-        int maxy = max(yLoc, yPosPlayer);
-        for (int y = miny + 1; y < maxy; y++)
-            if ((mvwinch(curwin, y, xLoc) & A_CHARTEXT) == '#')
-                wall = true;
+
+    if (playerY == getYLoc() &&
+        playerX > getXLoc()) {
+
+        return 3; // RIGHT
     }
 
-    return wall;
+    if (playerX == getXLoc() &&
+        playerY < getYLoc()) {
+
+        return 0; // UP
+    }
+
+    if (playerX == getXLoc() &&
+        playerY > getYLoc()) {
+
+        return 1; // DOWN
+    }
+
+    return -1;
 }
 
+bool Enemy2::wallbetween(Player* p, Map map) {
 
-bool Enemy2::seePlayer(Player *p) {
-    bool see;
-    if (xPosPlayer==xLoc||yPosPlayer==yLoc) {
-        see = true;
-    }else {see=false;}
-    return see;
-}
+    int playerX = p->getXLoc();
+    int playerY = p->getYLoc();
 
-int Enemy2::wherePlayer(Player*p) {
+    int enemyX = getXLoc();
+    int enemyY = getYLoc();
 
-    if (seePlayer(p)) {
-        if (yPosPlayer==yLoc&&xPosPlayer<xLoc) {
-            k=1;
-        }else if (xPosPlayer==xLoc&&yPosPlayer<yLoc) {
-            k=3;
-        }else if (yPosPlayer==yLoc&&xPosPlayer>xLoc) {
-            k=2;
-        }else if (xPosPlayer==xLoc&&yPosPlayer>yLoc) {
-            k=4;
+    // Stessa riga
+    if (playerY == enemyY) {
+
+        int minX = std::min(enemyX, playerX);
+        int maxX = std::max(enemyX, playerX);
+
+        for(int x = minX + 1; x < maxX; x++) {
+
+            if(map[enemyY][x] == '0' ||
+               map[enemyY][x] == '1') {
+
+                return true;
+            }
         }
-    }return k;
+    }
+
+    // Stessa colonna
+    else if (playerX == enemyX) {
+
+        int minY = std::min(enemyY, playerY);
+        int maxY = std::max(enemyY, playerY);
+
+        for(int y = minY + 1; y < maxY; y++) {
+
+            if(map[y][enemyX] == '0' ||
+               map[y][enemyX] == '1') {
+
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
-void Enemy2::firebullet(Player *p) {
+void Enemy2::firebullet(Player* p, Map map) {
 
-    auto now = std::chrono::steady_clock::now();
-    if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastBulletTime).count() < 1000)
+    time_t now = time(NULL);
+    if(now - lastBulletTime < 1) {
         return;
-    if (!seePlayer(p)) return;
-    if (wallbetween(p)) return;
+    }
+    if(!seePlayer(p)) {
+        return;
+    }
+    if(wallbetween(p, map)) {
+        return;
+    }
+
     int dir = wherePlayer(p);
-    if (dir == 0) return;
-    for (int i = 0; i < BU; i++) {
 
-        if (!b[i]->active) {
+    if(dir == -1) {
+        return;
+    }
+    for(int i = 0; i < BU; i++) {
 
-            b[i]->activate(xLoc, yLoc, dir);
+        if(b[i] != nullptr &&
+           !b[i]->active) {
+
+            b[i]->activate(
+                getXLoc(),
+                getYLoc(),
+                dir
+            );
 
             lastBulletTime = now;
+
             return;
         }
     }
 }
 
-*/
+void Enemy2::initBullets(Map map,
+                         Player* p,
+                         int width,
+                         int height) {
 
+    for(int i = 0; i < BU; i++) {
 
+        b[i] = new bullet(
+            map,
+            -1,
+            -1,
+            0,
+            p,
+            width,
+            height
+        );
+    }
+}
+
+void Enemy2::updateBullets() {
+
+    for(int i = 0; i < BU; i++) {
+
+        if(b[i] != nullptr &&
+           b[i]->active) {
+
+            b[i]->move();
+        }
+    }
+}

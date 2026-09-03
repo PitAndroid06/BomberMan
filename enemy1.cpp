@@ -7,6 +7,6 @@
 Enemy1::Enemy1(int y, int x) : Enemy(y, x) {}
 
 int Enemy1::choosePath() {
-    // Implement the logic for choosing a path for enemy1
+    return rand()%4;
     return 0; // Placeholder return value
 }

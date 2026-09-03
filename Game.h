@@ -4,6 +4,7 @@
 #include <ncurses.h>
 #include <iostream>
 #include <string>
+#include <ctime>
 #include "Classifica.h"
 #include "Player.h"
 #include "Bomb.h"
@@ -18,6 +19,7 @@ enum codeEntities{breakableWall, solidWall, player, enemy1, enemy2, bonus1, bonu
 const int CHARS_TO_DISPLAY = 11;
 const int MAX_ENEMIES = 10;
 const int DROP_CHANCE = 30;
+const int ENEMY_MOVE_INTERVAL = 1;
 
 struct Entity{
   codeEntities codeEntity;
@@ -42,6 +44,7 @@ class Game{
     BombHandler bombHandler;
     Item itemHandler;
     Time timeHandler;
+    time_t lastEnemyMoveTime;
 
     void printEntity(codeEntities c);
     const char* getEntityChar(codeEntities c);

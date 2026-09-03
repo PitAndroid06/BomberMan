@@ -2,25 +2,38 @@
 // Created by simone on 12/11/25.
 //
 
+#ifndef PLAYERENEMIES_ENEMY2_H
+#define PLAYERENEMIES_ENEMY2_H
 
 #define BU 20
+
 #include "Enemy.h"
-#include <chrono>
 #include "bullet.h"
+#include <ctime>
+#include <algorithm>
 
 class Enemy2 : public Enemy {
-  private:
-    int xPosPlayer;
-    int yPosPlayer;
-    bool bulletfired;
-    std::chrono::steady_clock::time_point lastBulletTime;
-    bullet*b[BU];
-    bool wallbetween(Player*p);
-    bool seePlayer(Player*p);
-    int wherePlayer(Player*p);
-    void firebullet(Player*p);
-  public:
-    Enemy2(int y, int x, int xPosPlayer, int yPosPlayer);
 
-    int choosePath() override;
+private:
+
+  time_t lastBulletTime;
+
+  bullet* b[BU];
+
+  bool wallbetween(Player* p, Map map);
+  bool seePlayer(Player* p);
+  int wherePlayer(Player* p);
+
+public:
+
+  Enemy2(int y, int x);
+  ~Enemy2();
+
+  int choosePath() override;
+
+  void initBullets(Map map, Player* p, int width, int height);
+  void firebullet(Player* p, Map map);
+  void updateBullets();
 };
+
+#endif
