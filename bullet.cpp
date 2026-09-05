@@ -1,27 +1,18 @@
 #include "bullet.h"
 
-bullet::bullet(Map map,
-               int x,
-               int y,
-               int direction,
-               Player* p,
-               int width,
-               int height) {
+bullet::bullet(int x, int y, int dir, int sizeGridX, int sizeGridY) {
 
-    this->map = map;
-    this->xLoc = x;
-    this->yLoc = y;
-    this->direction = direction;
-    this->p = p;
+    xLoc = x;
+    yLoc = y;
+    direction = dir;
 
-    this->gridWidth = width;
-    this->gridHeight = height;
+    gridWidth = sizeGridX;
+    gridHeight = sizeGridY;
 
-    this->active = false;
+    active = false;
 }
 
-void bullet::move() {
-
+bool bullet::move(const Map map) {
     switch (direction) {
 
         case 0: // UP
@@ -44,23 +35,22 @@ void bullet::move() {
         xLoc >= gridWidth ||
         yLoc < 0 ||
         yLoc >= gridHeight) {
-
         deactivate();
-        return;
-        }
-    if (iswall(xLoc, yLoc)) {
-        deactivate();
-        return;
+        return false;
     }
-    if (p->getXLoc() == xLoc &&
-        p->getYLoc() == yLoc) {
-
-        p->liveschange(0);
+    if (iswall(xLoc, yLoc, map)) {
         deactivate();
-        }
+        return false;
+    }
+    if (map[yLoc][xLoc] == '2') {
+        deactivate();
+        return false;
+    }
+    lastMoveTime = time(NULL);
+    return true;
 }
 
-bool bullet::iswall(int x, int y) {
+bool bullet::iswall(int x, int y, const Map map) {
 
     if (x < 0 ||
         x >= gridWidth ||
@@ -68,9 +58,8 @@ bool bullet::iswall(int x, int y) {
         y >= gridHeight) {
 
         return true;
-        }
-    return map[y][x] == '0' ||
-           map[y][x] == '1';
+    }
+    return map[y][x] == '0' || map[y][x] == '1';
 }
 
 void bullet::activate(int x, int y, int dir) {
@@ -79,9 +68,9 @@ void bullet::activate(int x, int y, int dir) {
     xLoc = x;
     yLoc = y;
     direction = dir;
+    lastMoveTime = time(NULL);
 }
 
 void bullet::deactivate() {
-
     active = false;
 }

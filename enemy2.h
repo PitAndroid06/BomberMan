@@ -6,6 +6,7 @@
 #define PLAYERENEMIES_ENEMY2_H
 
 #define BU 20
+#define BULLET_INTERVAL 10
 
 #include "Enemy.h"
 #include "bullet.h"
@@ -20,9 +21,9 @@ private:
 
   bullet* b[BU];
 
-  bool wallbetween(Player* p, Map map);
-  bool seePlayer(Player* p);
-  int wherePlayer(Player* p);
+  bool wallbetween(int playerX, int playerY, const Map map);
+  bool seePlayer(int playerX, int playerY);
+  int wherePlayer(int playerX, int playerY);
 
 public:
 
@@ -31,9 +32,9 @@ public:
 
   int choosePath() override;
 
-  void initBullets(Map map, Player* p, int width, int height);
-  void firebullet(Player* p, Map map);
-  void updateBullets();
+  void initBullets(int sizeGridX, int sizeGridY);
+  bullet* firebullet(int playerX, int playerY, const Map map);
+  bullet* getBullet(int index);
 };
 
 #endif

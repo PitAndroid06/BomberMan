@@ -1,79 +1,79 @@
 #include "Levels.h"
 
 Lvl::Lvl(){
-  this->map = nullptr;
-  this->nextLvl = nullptr;
-  this->precLvl = nullptr;
+  map = nullptr;
+  nextLvl = nullptr;
+  precLvl = nullptr;
 }
 
-Lvl::Lvl(Map map){
-  this->map = map;
-  this->nextLvl = nullptr;
-  this->precLvl = nullptr;
-  this->LvlNumber = 1;
+Lvl::Lvl(Map m){
+  map = m;
+  nextLvl = nullptr;
+  precLvl = nullptr;
+  LvlNumber = 1;
 }
 
-void Lvl::setNextLvl(Lvl* nextLvl){
-  this->nextLvl = nextLvl;
+void Lvl::setNextLvl(Lvl* nextLevel){
+  nextLvl = nextLevel;
 }
 
-void Lvl::setPrecLvl(Lvl* precLvl){
-  this->precLvl = precLvl;
+void Lvl::setPrecLvl(Lvl* precLevel){
+  precLvl = precLevel;
 }
 
 Lvl* Lvl::getNextLvl(){
-  return this->nextLvl;
+  return nextLvl;
 }
 
 Lvl* Lvl::getPrecLvl(){
-  return this->precLvl;
+  return precLvl;
 }
 
 Map Lvl::getMap(){
-  return this->map;
+  return map;
 }
 
 void Lvl::addLvl(Lvl* newLvl){
   newLvl->setPrecLvl(this);
-  this->setNextLvl(newLvl);
-  newLvl->LvlNumber = this->LvlNumber + 1;
+  setNextLvl(newLvl);
+  newLvl->LvlNumber = LvlNumber + 1;
 }
 
 int Lvl::getLvlNumber(){
-  return this->LvlNumber;
+  return LvlNumber;
 }
 
 bool Lvl::isFirst(){
-  return this->precLvl == nullptr;
+  return precLvl == nullptr;
 }
 
 bool Lvl::isLast(){
-  return this->nextLvl == nullptr;
+  return nextLvl == nullptr;
 }
 
-void Lvl::updateMap(Map map){
-  this->map = map;
+void Lvl::updateMap(Map m){
+  map = m;
 }
 
 void Lvl::deleteLvl(bool deleteNext) {
-  if(deleteNext && !this->isLast()) {
-    Lvl* temp = this->nextLvl;
-    this->nextLvl = this->nextLvl->getNextLvl();
-    if(this->nextLvl != nullptr) this->nextLvl->setPrecLvl(this);
+  if(deleteNext && !isLast()) {
+    Lvl* temp = nextLvl;
+    nextLvl = nextLvl->getNextLvl();
+    if(nextLvl != nullptr) nextLvl->setPrecLvl(this);
     delete temp;
   }
-  if (!deleteNext && !this->isFirst()) {
-    Lvl* temp = this->precLvl;
-    this->precLvl = this->precLvl->getPrecLvl();
-    if(this->precLvl != nullptr) this->precLvl->setNextLvl(this);
+  if (!deleteNext && !isFirst()) {
+    Lvl* temp = precLvl;
+    precLvl = precLvl->getPrecLvl();
+    if(precLvl != nullptr) precLvl->setNextLvl(this);
     delete temp;
   }
 }
 
 bool Lvl::getTimerInitialize() {
-  return this->timerInitialize;
+  return timerInitialize;
 }
 
 void Lvl::setTimerInitialize(bool time) {
-  this->timerInitialize = time;
+  timerInitialize = time;
 }

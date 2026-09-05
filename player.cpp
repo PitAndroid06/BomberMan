@@ -17,32 +17,32 @@ Player::Player(){
 }
 
 bool Player::mvup(Map grid) {
-    if (!iswall(grid, this->xLoc, this->yLoc - 1)){
-        this->yLoc--;
+    if (!iswall(grid, xLoc, yLoc - 1)){
+        yLoc--;
         return true;
     }
     return false;
 }
 
 bool Player::mvdown(Map grid) {
-    if (!iswall(grid, this->xLoc, this->yLoc + 1)){
-        this->yLoc++;
+    if (!iswall(grid, xLoc, yLoc + 1)){
+        yLoc++;
         return true;
     }
     return false;
 }
 
 bool Player::mvleft(Map grid) {
-    if (!iswall(grid, this->xLoc-1, this->yLoc)){
-        this->xLoc--;
+    if (!iswall(grid, xLoc-1, yLoc)){
+        xLoc--;
         return true;
     }
     return false;
 }
 
 bool Player::mvright(Map grid) {
-    if (!iswall(grid, this->xLoc+1, this->yLoc)) {
-        this->xLoc++;
+    if (!iswall(grid, xLoc+1, yLoc)) {
+        xLoc++;
         return true;
     }
     return false;
@@ -89,7 +89,7 @@ bool Player::iswall(Map grid, int x, int y) {
 }
 
 bool Player::isdead() {
-    return this->lives <= 0;
+    return lives <= 0;
 }
 
 void Player::invulnerability() {

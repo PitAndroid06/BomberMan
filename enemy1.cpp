@@ -3,10 +3,10 @@
 //
 
 #include "Enemy1.h"
+#include <cstdlib>
 
 Enemy1::Enemy1(int y, int x) : Enemy(y, x) {}
 
 int Enemy1::choosePath() {
-    return rand()%4;
-    return 0; // Placeholder return value
+    return rand() % 4;
 }

@@ -13,22 +13,15 @@ public:
     int direction;
     bool active;
 
-    Map map;
-    Player* p;
+    time_t lastMoveTime;
 
     int gridWidth;
     int gridHeight;
 
-    bullet(Map map,
-           int x,
-           int y,
-           int direction,
-           Player* p,
-           int width,
-           int height);
+    bullet(int x, int y, int direction, int sizeGridX, int sizeGridY);
 
-    void move();
-    bool iswall(int x, int y);
+    bool move(const Map map);
+    bool iswall(int x, int y, const Map map);
     void activate(int x, int y, int dir);
     void deactivate();
 };

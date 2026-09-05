@@ -21,16 +21,16 @@ void Enemy::mvright() {
 void Enemy::UpdateLocation(int dir) {
   switch(dir) {
     case 0: // up
-      this->mvup();
+      mvup();
       break;
     case 1: // down
-      this->mvdown();
+      mvdown();
       break;
     case 2: // left
-      this->mvleft();
+      mvleft();
       break;
     case 3: // right
-      this->mvright();
+      mvright();
       break;
     default:
       break;

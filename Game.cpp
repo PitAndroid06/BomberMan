@@ -1,7 +1,9 @@
 #include "Game.h"
 #include <fstream>
 
-/*caratteri per il gioco:
+/*
+
+Caratteri per il gioco:
 
 player: ◉
 enemies: ▲, ■
@@ -11,17 +13,21 @@ bombs: o, ●
 explosion: ✹
 walls: █, ░
 lives: ♥
+bulletLeft: <
+bulletRight: >
+bulletUp: ^
+bulletDown: v
 
 */
 
-Game::Game(int start_x, int start_y, int width, int height)
-    : bombHandler(width, height) {
+Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
+    : bombHandler(gridWidth, gridHeight) {
   
-  this->sizeGridX = width;
-  this->sizeGridY = height;
-  this->start_x = start_x;
-  this->start_y = start_y;
-  this->loadClassifica("config/scores.txt");
+  sizeGridX = gridWidth;
+  sizeGridY = gridHeight;
+  start_x = initialX;
+  start_y = initialY;
+  loadClassifica("config/scores.txt");
 
   setlocale(LC_ALL, "");
   initscr();
@@ -44,84 +50,83 @@ Game::Game(int start_x, int start_y, int width, int height)
   init_pair(7, COLOR_ORANGE, COLOR_BLACK);
 
 
-  this->AllEntitiesChar[0] = {codeEntities::breakableWall, "░", 1};
-  this->AllEntitiesChar[1] = {codeEntities::solidWall, "█", 2};
-  this->AllEntitiesChar[2] = {codeEntities::player, "◉", 3};
-  this->AllEntitiesChar[3] = {codeEntities::enemy1, "▲", 4};
-  this->AllEntitiesChar[4] = {codeEntities::enemy2, "■", 4};
-  this->AllEntitiesChar[5] = {codeEntities::bombAnimation1, "o", 5};
-  this->AllEntitiesChar[6] = {codeEntities::bombAnimation2, "●", 5};
-  this->AllEntitiesChar[7] = {codeEntities::bonus1, "✪", 6};
-  this->AllEntitiesChar[8] = {codeEntities::bonus2, "✚", 3};
-  this->AllEntitiesChar[9] = {codeEntities::explosion, "✹", 7};
-  this->AllEntitiesChar[10] = {codeEntities::lives, "♥", 5};
-
+  AllEntitiesChar[0] = {codeEntities::breakableWall, "░", 1};
+  AllEntitiesChar[1] = {codeEntities::solidWall, "█", 2};
+  AllEntitiesChar[2] = {codeEntities::player, "◉", 3};
+  AllEntitiesChar[3] = {codeEntities::enemy1, "▲", 4};
+  AllEntitiesChar[4] = {codeEntities::enemy2, "■", 4};
+  AllEntitiesChar[5] = {codeEntities::bombAnimation1, "o", 5};
+  AllEntitiesChar[6] = {codeEntities::bombAnimation2, "●", 5};
+  AllEntitiesChar[7] = {codeEntities::bonus1, "✪", 6};
+  AllEntitiesChar[8] = {codeEntities::bonus2, "✚", 3};
+  AllEntitiesChar[9] = {codeEntities::explosion, "✹", 7};
+  AllEntitiesChar[10] = {codeEntities::lives, "♥", 5};
+  AllEntitiesChar[11] = {codeEntities::bulletLeft, "<", 5};
+  AllEntitiesChar[12] = {codeEntities::bulletRight, ">", 5};
+  AllEntitiesChar[13] = {codeEntities::bulletUp, "^", 5};
+  AllEntitiesChar[14] = {codeEntities::bulletDown, "v", 5};
   
-  this->win = newwin(height+1, width + 25, start_y, start_x);
-  keypad(this->win, TRUE); // Abilita tasti speciali (F1, frecce, ecc.)
-  nodelay(this->win, TRUE);// getch ritorna -1 se non c'è input
-  
-  mvprintw(start_y-1, start_x + (width/2)-4, "Bomberman");
-
-  refresh();
+  win = newwin(gridHeight + 1, gridWidth + 25, initialY, initialX);
+  keypad(win, TRUE); // Abilita tasti speciali (F1, frecce, ecc.)
+  nodelay(win, TRUE);// getch ritorna -1 se non c'è input
 }
 
 void Game::printEntity(codeEntities c){
-  int color = this->getEntityColor(c);
-  wattron(this->win, COLOR_PAIR(color));
-  wprintw(this->win, "%s", this->getEntityChar(c));
-  wattroff(this->win, COLOR_PAIR(color));
+  int color = getEntityColor(c);
+  wattron(win, COLOR_PAIR(color));
+  wprintw(win, "%s", getEntityChar(c));
+  wattroff(win, COLOR_PAIR(color));
 }
 
 const char* Game::getEntityChar(codeEntities c){
   for(int i = 0; i < CHARS_TO_DISPLAY; i++){
-    if(this->AllEntitiesChar[i].codeEntity == c) return this->AllEntitiesChar[i].ch;
+    if(AllEntitiesChar[i].codeEntity == c) return AllEntitiesChar[i].ch;
   }
   return "";
 }
 
 int Game::getEntityColor(codeEntities c){
   for(int i = 0; i < CHARS_TO_DISPLAY; i++){
-    if(this->AllEntitiesChar[i].codeEntity == c) return this->AllEntitiesChar[i].colorPair;
+    if(AllEntitiesChar[i].codeEntity == c) return AllEntitiesChar[i].colorPair;
   }
   return -1;
 }
 
 Game::~Game(){
   endwin();
-  this->saveClassifica("config/scores.txt");
+  saveClassifica("config/scores.txt");
 }
 
 bool Game::isLoaded(){
-  if(this->current_lvl == nullptr)return false;
+  if(current_lvl == nullptr)return false;
   else return true;
 }
 
 int Game::checkInput(){
-  return wgetch(this->win);
+  return wgetch(win);
 }
 
 bool Game::loadLevels(string file){
-  this->current_lvl = nullptr;
+  current_lvl = nullptr;
   fstream inputFile;
   inputFile.open(file);
   char ch;
   while(inputFile.get(ch)){
-    Map map = new char*[this->sizeGridY];
-    for (int i = 0; i < this->sizeGridY; i++)
-      map[i] = new char[this->sizeGridX];
+    Map map = new char*[sizeGridY];
+    for (int i = 0; i < sizeGridY; i++)
+      map[i] = new char[sizeGridX];
     int row = 0;
     int col = 0;
     map[row][col] = ch;
     col++;
-    while (inputFile.get(ch) && row < this->sizeGridY){
+    while (inputFile.get(ch) && row < sizeGridY){
       if(ch == '\r')continue;
       try{
         if((ch >= 48 + 5 || ch < 48) && ch != '\n' && ch != ' ')throw ch;
-        if (ch == '\n' || col >= this->sizeGridX){
+        if (ch == '\n' || col >= sizeGridX){
           col = 0;
           row++;
-          if (row >= this->sizeGridY) break;
+          if (row >= sizeGridY) break;
           else continue;
         }
         map[row][col] = ch;
@@ -131,12 +136,12 @@ bool Game::loadLevels(string file){
         break;
       }
     }
-    if(row == this->sizeGridY && col == 0){
-      if(this->current_lvl == nullptr){
-        this->current_lvl = new Lvl(map);
+    if(row == sizeGridY && col == 0){
+      if(current_lvl == nullptr){
+        current_lvl = new Lvl(map);
       } else {
-        this->current_lvl->addLvl(new Lvl(map));
-        this->current_lvl = this->current_lvl->getNextLvl();
+        current_lvl->addLvl(new Lvl(map));
+        current_lvl = current_lvl->getNextLvl();
       }
     } else {
       cout<<"Livello non caricato correttamente - Interrotto caricamento!"<<endl;
@@ -144,8 +149,8 @@ bool Game::loadLevels(string file){
     }
   }
   inputFile.close();
-  while(this->current_lvl != nullptr && !this->current_lvl->isFirst()){
-    this->current_lvl = this->current_lvl->getPrecLvl();
+  while(current_lvl != nullptr && !current_lvl->isFirst()){
+    current_lvl = current_lvl->getPrecLvl();
   }
   return true;
 }
@@ -166,7 +171,7 @@ void Game::loadClassifica(string file){
     if(ch == '\n'){
       stage++;
       if(stage == 2){
-        this->classifica.addRecord(nome, stoi(punteggio));
+        classifica.addRecord(nome, stoi(punteggio));
         stage = 0;
         nome = "";
         punteggio = "0";
@@ -191,7 +196,7 @@ void Game::loadClassifica(string file){
 void Game::saveClassifica(string file){
   ofstream outputFile;
   outputFile.open(file);
-  record* r = this->classifica.getRecords();
+  record* r = classifica.getRecords();
   while(r != nullptr){
     outputFile << r->nome << ", " << r->punteggio << endl;
     r = r->next;
@@ -200,29 +205,29 @@ void Game::saveClassifica(string file){
 }
 
 void Game::drawLevel(){
-  Map m = this->current_lvl->getMap();
+  Map m = current_lvl->getMap();
   bool drawedPlayer = false;
-  this->currentEnemyCount = 0;
+  currentEnemyCount = 0;
 
   //Disegna eventuali vie laterali
-  if(!this->current_lvl->isFirst()){
+  if(!current_lvl->isFirst()){
     if(m[10][0] == '1'){
       m[10][0] = ' ';
-      this->current_lvl->updateMap(m);
+      current_lvl->updateMap(m);
     }
-    this->drawBackGateway(true);
+    drawBackGateway(true);
   } else {
     m[10][0] = '1';
-    this->current_lvl->updateMap(m);
-    this->drawBackGateway(false);
+    current_lvl->updateMap(m);
+    drawBackGateway(false);
   }
-  this->drawNextGateway(this->isLevelCompleted());
+  drawNextGateway(isLevelCompleted());
 
   //Disegna tutto il livello
-  for(int i = 0; i < this->sizeGridY; i++){
-    for(int j = 0; j < this->sizeGridX; j++){
-      wmove(this->win, i, j);
-      if(m[i][j] == ' ') wprintw(this->win, " ");
+  for(int i = 0; i < sizeGridY; i++){
+    for(int j = 0; j < sizeGridX; j++){
+      wmove(win, i, j);
+      if(m[i][j] == ' ') wprintw(win, " ");
       else {
         switch(int(m[i][j]-48)){
           case codeEntities::breakableWall:
@@ -233,38 +238,31 @@ void Game::drawLevel(){
             break;
           case codeEntities::player:
             printEntity(codeEntities::player);
-            this->pl.updatePosition(i, j);
+            pl.updatePosition(i, j);
             drawedPlayer = true;
             break;
           case codeEntities::enemy1:
             //init_enemy1
-            if(this->currentEnemyCount < MAX_ENEMIES){
+            if(currentEnemyCount < MAX_ENEMIES){
               printEntity(codeEntities::enemy1);
-              enemies[this->currentEnemyCount] = new Enemy1(i, j);
-              this->currentEnemyCount++;
+              enemies[currentEnemyCount] = new Enemy1(i, j);
+              currentEnemyCount++;
             }
             break;
           case codeEntities::enemy2:
-
-    if(this->currentEnemyCount < MAX_ENEMIES) {
-
-        printEntity(codeEntities::enemy2);
-
-        Enemy2* enemy = new Enemy2(i, j);
-
-        enemy->initBullets(
-            this->current_lvl->getMap(),
-            &this->pl,
-            this->sizeGridX,
-            this->sizeGridY
-        );
-
-        this->enemies[this->currentEnemyCount] = enemy;
-
-        this->currentEnemyCount++;
-    }
-
-    break;
+            if(currentEnemyCount < MAX_ENEMIES) {
+            
+              printEntity(codeEntities::enemy2);
+            
+              Enemy2* enemy = new Enemy2(i, j);
+            
+              enemy->initBullets(sizeGridX, sizeGridY);
+            
+              enemies[currentEnemyCount] = enemy;
+            
+              currentEnemyCount++;
+            }
+            break;
 
           case codeEntities::bonus1:
             printEntity(codeEntities::bonus1);
@@ -280,30 +278,22 @@ void Game::drawLevel(){
   
   //Disegna eventualmente il giocatore
   if(!drawedPlayer){
-    wmove(this->win, this->pl.getYLoc(), this->pl.getXLoc());
+    wmove(win, pl.getYLoc(), pl.getXLoc());
     printEntity(codeEntities::player);
   }
   
   //Disegna le vite
-  wmove(this->win, this->sizeGridY, 1);
-  for(int i = 0; i < this->pl.getLives(); i++){
-    this->printEntity(codeEntities::lives);
-  }
+  updateLives();
 
   //Disegna il numero del livello
-  wmove(this->win, this->sizeGridY, (this->sizeGridX/2)-4);
-  string levelStr = "Level " + to_string(this->current_lvl->getLvlNumber());
-  wprintw(this->win, "%s", levelStr.c_str());
+  string levelStr = "Level " + to_string(current_lvl->getLvlNumber());
+  mvprintw(start_y-1, start_x+32, "%s", levelStr.c_str());
 
   // Stampa tempo iniziale
-  wmove(this->win, this->sizeGridY, this->sizeGridX - 12);
-  string timeStr = "Time: " + to_string(this->timeHandler.getRemainingTime()) + "  ";
-  wprintw(this->win, "%s", timeStr.c_str());
+  updateTime();
 
   // Stampa score
-  wmove(this->win, this->sizeGridY, 1);
-  string scoreStr = "Score: " + to_string(this->score) + "  ";
-  wprintw(this->win, "%s", scoreStr.c_str());
+  updateScore();
 
   refresh();
 }
@@ -311,45 +301,48 @@ void Game::drawLevel(){
 int Game::showMenu(){
   int ch;
   int choise = 0;
-  int coord[3][2] = {{(this->sizeGridX/3)+1,(this->sizeGridY/4)},
-                     {(this->sizeGridX/3)-3,(this->sizeGridY/4)+2},
-                     {(this->sizeGridX/3)+1,(this->sizeGridY/4)+4}};
+  int coord[3][2] = {{(sizeGridX/3)+1,(sizeGridY/4)},
+                     {(sizeGridX/3)-3,(sizeGridY/4)+2},
+                     {(sizeGridX/3)+1,(sizeGridY/4)+4}};
 
-  wclear(this->win);
+  wclear(win);
   mvprintw(start_y+9, start_x-1, " ");
   mvprintw(start_y+11, start_x-1, " ");
+  move(start_y-1, start_x);
+  for(int i = 0; i < sizeGridX; i++) printw(" ");
+  mvprintw(start_y-1, start_x + (sizeGridX/2)-4, "Bomberman");
   refresh();
-  mvwprintw(this->win, coord[0][1], coord[0][0]-3, ">  Nuova partita");
-  mvwprintw(this->win, coord[1][1], coord[1][0]  , "Visualizza classifica");
-  mvwprintw(this->win, coord[2][1], coord[2][0]  , "Esci dal gioco");
-  while((ch = this->checkInput()) != '\n'){
+  mvwprintw(win, coord[0][1], coord[0][0]-3, ">  Nuova partita");
+  mvwprintw(win, coord[1][1], coord[1][0]  , "Visualizza classifica");
+  mvwprintw(win, coord[2][1], coord[2][0]  , "Esci dal gioco");
+  while((ch = checkInput()) != '\n'){
     if(ch == KEY_UP){
-      mvwprintw(this->win, coord[choise][1], coord[choise][0]-3, " ");
+      mvwprintw(win, coord[choise][1], coord[choise][0]-3, " ");
       if(choise == 0) choise = 2;
       else choise--;
     } else if(ch == KEY_DOWN){
-      mvwprintw(this->win, coord[choise][1], coord[choise][0]-3, " ");
+      mvwprintw(win, coord[choise][1], coord[choise][0]-3, " ");
       if(choise == 2) choise = 0;
       else choise++;
     } else continue;
-    mvwprintw(this->win, coord[choise][1], coord[choise][0]-3, ">");
+    mvwprintw(win, coord[choise][1], coord[choise][0]-3, ">");
   }
   return choise;
 }
 
 void Game::showClassifica(int page, int rec_per_page){
-  wclear(this->win);
-  record* r = this->classifica.getRecords();
-  if(r == nullptr && page == 0) mvwprintw(this->win, this->sizeGridY/4, (this->sizeGridX/4)+1, "Ancora nessun record");
+  wclear(win);
+  record* r = classifica.getRecords();
+  if(r == nullptr && page == 0) mvwprintw(win, sizeGridY/4, (sizeGridX/4)+1, "Ancora nessun record");
   int pos = page*rec_per_page;
   for(int i = 0; i < pos; i++) r = r->next;
   do{
-    string rec = r->nome + " - " + to_string(r->punteggio);
+    string rec = r->nome + "\t- " + to_string(r->punteggio);
     if(pos < 3){
       rec = to_string((pos%5)+1) + ". " + rec;
-      mvwprintw(this->win, (((pos%5)+1)*2), (this->sizeGridX/3), "%s", rec.c_str());
+      mvwprintw(win, (((pos%5)+1)*2), (sizeGridX/3), "%s", rec.c_str());
     } else 
-    mvwprintw(this->win, (((pos%5)+1)*2), (this->sizeGridX/3)+3, "%s", rec.c_str());
+    mvwprintw(win, (((pos%5)+1)*2), (sizeGridX/3)+3, "%s", rec.c_str());
     pos++;
     r = r->next;
     if(r == nullptr) break;
@@ -359,17 +352,17 @@ void Game::showClassifica(int page, int rec_per_page){
   else bar += "  ";
   bar += "Page " + to_string(page+1);
   if(r != nullptr)bar += " >";
-  mvwprintw(this->win, this->sizeGridY - 2, (this->sizeGridX/2)-(bar.length()/2), "%s", bar.c_str());
+  mvwprintw(win, sizeGridY - 2, (sizeGridX/2)-(bar.length()/2), "%s", bar.c_str());
   int ch;
-  while((ch = this->checkInput()) != '\n'){
+  while((ch = checkInput()) != '\n'){
     if(ch == KEY_LEFT){
       if(page != 0){
-        this->showClassifica(page-1);
+        showClassifica(page-1);
         break;
       }
     } else if (ch == KEY_RIGHT){
       if(r != nullptr){
-        this->showClassifica(page+1);
+        showClassifica(page+1);
         break;
       }
     }
@@ -377,25 +370,26 @@ void Game::showClassifica(int page, int rec_per_page){
 }
 
 bool Game::goToNextLevel(){
-  if(this->current_lvl->isLast()) return false;
-  else this->current_lvl = this->current_lvl->getNextLvl();
+  if(current_lvl->isLast()) return false;
+  else current_lvl = current_lvl->getNextLvl();
   return true;
 }
 
 bool Game::goToPrecLevel(){
-  if(this->current_lvl->isFirst()) return false;
-  else this->current_lvl = this->current_lvl->getPrecLvl();
+  if(current_lvl->isFirst()) return false;
+  else current_lvl = current_lvl->getPrecLvl();
   return true;
 }
 
 void Game::runTime(){
   int ch;
   while(1){
-    ch = this->checkInput();
+    ch = checkInput();
     if(ch == 'q') break;
+    //character movement
     else if(ch != -1){
-      int x = this->pl.getXLoc();
-      int y = this->pl.getYLoc();
+      int x = pl.getXLoc();
+      int y = pl.getYLoc();
 
       if (ch == 'w' || ch == 's' || ch == 'a' || ch == 'd') {
         int nextX = x, nextY = y;
@@ -405,12 +399,12 @@ void Game::runTime(){
         else if (ch == 'd') nextX++;
         
         // Controlla se il giocatore sta per raccogliere un item ('5' = bonus1, 6 = bonus2)
-        if (nextY >= 0 && nextY < this->sizeGridY && nextX >= 0 && nextX < this->sizeGridX) {
-          if (this->current_lvl->getMap()[nextY][nextX] == '5') {
-            this->itemHandler.collect();
-          } else if (this->current_lvl->getMap()[nextY][nextX] == '6') {
-            if(this->pl.getLives() < 3){
-              this->pl.liveschange(1);
+        if (nextY >= 0 && nextY < sizeGridY && nextX >= 0 && nextX < sizeGridX) {
+          if (current_lvl->getMap()[nextY][nextX] == '5') {
+            itemHandler.collect();
+          } else if (current_lvl->getMap()[nextY][nextX] == '6') {
+            if(pl.getLives() < 4){
+              pl.liveschange(1);
               updateLives();
             }
           }
@@ -418,104 +412,119 @@ void Game::runTime(){
         
         //Go to the next level if the player reaches the exit point (40, 10)
         if((nextX == 40 || nextX == -1) && nextY == 10){
-          bool isCleared = this->isLevelCleared();
+          bool isCleared = isLevelCleared();
           if(nextX == 40){
-            if(this->goToNextLevel()){
+            if(goToNextLevel()){
               if(isCleared){
-                this->current_lvl->deleteLvl(false);
+                current_lvl->deleteLvl(false);
               }
-              if(!this->current_lvl->getTimerInitialize()){
-                this->current_lvl->setTimerInitialize(true);
-                this->timeHandler.start(200 + this->timeHandler.getRemainingTime()); // Riavvia timer
+              if(!current_lvl->getTimerInitialize()){
+                current_lvl->setTimerInitialize(true);
+                timeHandler.start(200 + timeHandler.getRemainingTime()); // Riavvia timer
               }
-              this->pl.resetPosition();
-              this->drawLevel();
+              pl.resetPosition();
+              drawLevel();
             } else {
-              this->score += this->timeHandler.getRemainingTime(); // Bonus tempo
-              this->GameOver("YOU WON!");
+              score += timeHandler.getRemainingTime(); // Bonus tempo
+              GameOver("YOU WON!");
               break;
             }
           } else if(nextX == -1){
-            if(this->goToPrecLevel()){
+            if(goToPrecLevel()){
               if(isCleared){
-                this->current_lvl->deleteLvl(true);
+                current_lvl->deleteLvl(true);
               }
-              this->pl.resetPosition();
-              this->drawLevel();
+              pl.resetPosition();
+              drawLevel();
             }
           }
         } else {
           bool collision = false;
-          Map update;
-          for(int i = 0; i < this->currentEnemyCount; i++){
-            if(nextX == this->enemies[i]->getXLoc() && nextY == this->enemies[i]->getYLoc()){
-              this->pl.liveschange(0);
-              this->pl.resetPosition();
-              collision = true;
-              updateLives();
-              break;
+          Map update = current_lvl->getMap();
+          if(update[nextY][nextX] == '4' || update[nextY][nextX] == '3' || update[nextY][nextX] == 'A' || update[nextY][nextX] == 'B' || update[nextY][nextX] == 'C' || update[nextY][nextX] == 'D'){
+            pl.liveschange(0);
+            pl.resetPosition();
+            collision = true;
+            updateLives();
+
+            // Se il giocatore viene colpito da un proiettile
+            if(update[nextY][nextX] == 'A' || update[nextY][nextX] == 'B' || update[nextY][nextX] == 'C' || update[nextY][nextX] == 'D'){
+              update[nextY][nextX] = ' ';
+              wmove(win, nextY, nextX);
+              wprintw(win, " ");
             }
           }
           if(!collision){
-            update = this->pl.getmv(ch, this->current_lvl->getMap());
+            update = pl.getmv(ch, current_lvl->getMap());
           } else {
-            update = this->current_lvl->getMap();
             update[y][x] = ' ';
-            update[1][1] = '2';
+            update[pl.getYLoc()][pl.getXLoc()] = '2';
           }
           if(update != nullptr){
-            mvwprintw(this->win, y, x, " ");
-            wmove(this->win, this->pl.getYLoc(), this->pl.getXLoc());
+            mvwprintw(win, y, x, " ");
+            wmove(win, pl.getYLoc(), pl.getXLoc());
             printEntity(codeEntities::player);
-            this->current_lvl->updateMap(update);
+            current_lvl->updateMap(update);
           }
         }
       }
 
       //Piazza la bomba
       if(ch == ' '){
-        this->bombHandler.placeBomb(this->pl.getXLoc(), this->pl.getYLoc(), this->itemHandler.getBombRadius(), 200);
+        bombHandler.placeBomb(pl.getXLoc(), pl.getYLoc(), itemHandler.getBombRadius(), 200);
       }
     }
+    
     // Aggiorna item
-    this->itemHandler.update();
+    itemHandler.update();
 
     // Aggiorna bomba e gestisci esplosioni
-    if(this->bombHandler.update(this->current_lvl->getMap())) {
+    if(bombHandler.update(current_lvl->getMap())) {
 
-      ExplodedCell* cells = this->bombHandler.getExplodedCells();
-      int size = this->bombHandler.getExplosionSize();
+      ExplodedCell* cells = bombHandler.getExplodedCells();
+      int size = bombHandler.getExplosionSize();
       
       //La bomba è esplosa
-      if(this->bombHandler.isBombActive()){
+      if(bombHandler.isBombActive()){
 
-        Map update = this->current_lvl->getMap();
+        Map update = current_lvl->getMap();
 
         for (int i = 0; i < size; i++) {
         
           // Controlla se il giocatore è stato colpito
-          if (cells[i].x == this->pl.getXLoc() && cells[i].y == this->pl.getYLoc()) {
-            this->pl.liveschange(0);
-            update[this->pl.getYLoc()][this->pl.getXLoc()] = ' ';
-            this->pl.resetPosition();
-            update[this->pl.getYLoc()][this->pl.getXLoc()] = '2';
+          if (cells[i].x == pl.getXLoc() && cells[i].y == pl.getYLoc()) {
+            pl.liveschange(0);
+            update[pl.getYLoc()][pl.getXLoc()] = ' ';
+            pl.resetPosition();
+            update[pl.getYLoc()][pl.getXLoc()] = '2';
             updateLives();
           }
         
           // Controlla se un nemico è stato colpito
-          for(int j = 0; j < this->currentEnemyCount; j++){
-            if(cells[i].x == this->enemies[j]->getXLoc() && cells[i].y == this->enemies[j]->getYLoc()){
-              delete this->enemies[j];
-              for(int k = j; k < this->currentEnemyCount-1; k++){
-                this->enemies[k] = this->enemies[k+1];
+          for(int j = 0; j < currentEnemyCount; j++){
+            if(cells[i].x == enemies[j]->getXLoc() && cells[i].y == enemies[j]->getYLoc()){
+              Enemy2* enemy2 = dynamic_cast<Enemy2*>(enemies[j]);
+              if(enemy2 != nullptr){
+                for(int i = 0;i < BU; i++){
+                  bullet* b = enemy2->getBullet(i);
+                  if(b != nullptr &&  b->active){
+                    update[b->yLoc][b->xLoc] = ' ';
+                    mvwprintw(win, b->yLoc, b->xLoc, " ");
+                  } else break;
+                }
               }
-              this->currentEnemyCount--;
+              delete enemies[j];
+              for(int k = j; k < currentEnemyCount-1; k++){
+                enemies[k] = enemies[k+1];
+              }
+              currentEnemyCount--;
 
               update[cells[i].y][cells[i].x] = ' ';
-              this->score += 75;
+              score += 75;
+              updateScore();
               if(currentEnemyCount == 0){
                 update[10][39] = ' '; // Rimuovi il muro che blocca l'uscita
-                this->drawNextGateway(true);
+                drawNextGateway(true);
               }
               break;
             }
@@ -530,25 +539,31 @@ void Game::runTime(){
             } else {
               update[cells[i].y][cells[i].x] = ' '; // Solo distruzione
             }
-            this->score += 10;
+            score += 10;
+            updateScore();
+          }
+
+          //Controlla se la cella colpita è un proiettile nemico
+          if(update[cells[i].y][cells[i].x] == 'A' || update[cells[i].y][cells[i].x] == 'B' || update[cells[i].y][cells[i].x] == 'C' || update[cells[i].y][cells[i].x] == 'D'){
+            update[cells[i].y][cells[i].x] = ' ';
           }
 
           // Disegna esplosione a schermo
-          wmove(this->win, cells[i].y, cells[i].x);
+          wmove(win, cells[i].y, cells[i].x);
           printEntity(codeEntities::explosion);
         }
 
-        this->current_lvl->updateMap(update);
-        wrefresh(this->win);
+        current_lvl->updateMap(update);
+        wrefresh(win);
       }
       // La bomba ha finito il tempo di animazione dell'esplosione
       else {
 
-        const Map lvl = this->current_lvl->getMap();
+        const Map lvl = current_lvl->getMap();
 
         // Pulisci celle dell'esplosione
         for (int i = 0; i < size; i++) {
-          wmove(this->win, cells[i].y, cells[i].x);
+          wmove(win, cells[i].y, cells[i].x);
           switch(lvl[cells[i].y][cells[i].x]){
             case codeEntities::bonus1+48:
               printEntity(codeEntities::bonus1);
@@ -557,26 +572,26 @@ void Game::runTime(){
               printEntity(codeEntities::bonus2);
               break;
             case ' ':
-              wprintw(this->win, " ");
+              wprintw(win, " ");
               break;
             default: break;
           }
         }
         
-        if(!this->pl.isdead()){
-          wmove(this->win, this->pl.getYLoc(), this->pl.getXLoc());
+        if(!pl.isdead()){
+          wmove(win, pl.getYLoc(), pl.getXLoc());
           printEntity(codeEntities::player);
         }
-        wrefresh(this->win);
-        this->bombHandler.clearExplosion();
+        wrefresh(win);
+        bombHandler.clearExplosion();
       }
       
     }
 
     // Disegna bomba se attiva
-    bomb b = this->bombHandler.getBomb();
-    if (b.isActive && !this->bombHandler.hasExploded()) {
-      wmove(this->win, b.y, b.x);
+    bomb b = bombHandler.getBomb();
+    if (b.isActive && !bombHandler.hasExploded()) {
+      wmove(win, b.y, b.x);
       if (b.timer % 50 < 25) {
         printEntity(codeEntities::bombAnimation1);
       } else {
@@ -585,195 +600,235 @@ void Game::runTime(){
     }
 
     //move all enemies.
+    time_t now = time(NULL);
+    Map map = current_lvl->getMap();
+    for(int i = 0; i < currentEnemyCount; i++) {
 
+      Enemy2* enemy2 = dynamic_cast<Enemy2*>(enemies[i]);
 
-time_t now = time(NULL);
+      //Update bullets
+      if(enemy2 != nullptr) {
+        bullet* newBullet = enemy2->firebullet(pl.getXLoc(), pl.getYLoc(), map);
 
-if(now - this->lastEnemyMoveTime >= ENEMY_MOVE_INTERVAL) {
-
-    Map map = this->current_lvl->getMap();
-
-    for(int i = 0; i < this->currentEnemyCount; i++) {
-        Enemy2* enemy2 =
-            dynamic_cast<Enemy2*>(this->enemies[i]);
-        if(enemy2 != nullptr) {
-
-            enemy2->firebullet(
-                &this->pl,
-                map
-            );
-
-            enemy2->updateBullets();
+        //Draw new bullet
+        if(newBullet != nullptr) {
+          wmove(win, newBullet->yLoc, newBullet->xLoc);
+          switch(newBullet->direction) {
+            case 0: // Up
+              map[newBullet->yLoc][newBullet->xLoc] = 'A';
+              printEntity(codeEntities::bulletUp);
+              break;
+            case 1: // Down
+              map[newBullet->yLoc][newBullet->xLoc] = 'B';
+              printEntity(codeEntities::bulletDown);
+              break;
+            case 2: // Left
+              map[newBullet->yLoc][newBullet->xLoc] = 'C';
+              printEntity(codeEntities::bulletLeft);
+              break;
+            case 3: // Right
+              map[newBullet->yLoc][newBullet->xLoc] = 'D';
+              printEntity(codeEntities::bulletRight);
+              break;
+          }
+          current_lvl->updateMap(map);
         }
 
-        int oldX = this->enemies[i]->getXLoc();
-        int oldY = this->enemies[i]->getYLoc();
+        //Update bullets
+        int index = 0;
+        for(int i = 0; i < BU; i++){
 
-        int direction =
-            this->enemies[i]->choosePath();
+          bullet* currentBullet = enemy2->getBullet(i);
+          if(currentBullet != nullptr && currentBullet->active) {
+            if(now - currentBullet->lastMoveTime >= BULLET_SPEED) {
 
+              // Erase bullet in old position
+              if(map[currentBullet->yLoc][currentBullet->xLoc] == ' '){
+                currentBullet->deactivate();
+                continue;
+              } else {
+                map[currentBullet->yLoc][currentBullet->xLoc] = ' ';
+                wmove(win, currentBullet->yLoc, currentBullet->xLoc);
+                wprintw(win, " ");
+              }
+
+              if(!currentBullet->move(map)){
+
+                //Colpito il giocatore
+                if(currentBullet->xLoc == pl.getXLoc() && currentBullet->yLoc == pl.getYLoc()) {
+                  pl.liveschange(0);
+                  map[pl.getYLoc()][pl.getXLoc()] = ' ';
+                  wmove(win, pl.getYLoc(), pl.getXLoc());
+                  wprintw(win, " ");
+                  pl.resetPosition();
+                  updateLives();
+                  map[pl.getYLoc()][pl.getXLoc()] = '2';
+
+                  // Draw player in new position
+                  wmove(win, pl.getYLoc(), pl.getXLoc());
+                  printEntity(codeEntities::player);
+                }
+              } else {
+
+                // Draw bullet in new position
+                wmove(win, currentBullet->yLoc, currentBullet->xLoc);
+                switch(currentBullet->direction) {
+                  case 0: // Up
+                    map[currentBullet->yLoc][currentBullet->xLoc] = 'A';
+                    printEntity(codeEntities::bulletUp);
+                    break;
+                  case 1: // Down
+                    map[currentBullet->yLoc][currentBullet->xLoc] = 'B';
+                    printEntity(codeEntities::bulletDown);
+                    break;
+                  case 2: // Left
+                    map[currentBullet->yLoc][currentBullet->xLoc] = 'C';
+                    printEntity(codeEntities::bulletLeft);
+                    break;
+                  case 3: // Right
+                    map[currentBullet->yLoc][currentBullet->xLoc] = 'D';
+                    printEntity(codeEntities::bulletRight);
+                    break;
+                }
+              }
+            }
+          }
+        }
+        current_lvl->updateMap(map);
+      }
+      
+      //Update enemies
+      if(now - lastEnemyMoveTime >= ENEMY_SPEED) {
+        int oldX = enemies[i]->getXLoc();
+        int oldY = enemies[i]->getYLoc();
+        
+        int direction = enemies[i]->choosePath();
+        
         int newX = oldX;
         int newY = oldY;
-
+    
         switch(direction) {
-
-            case 0:
-                newY--;
-                break;
-
-            case 1:
-                newY++;
-                break;
-
-            case 2:
-                newX--;
-                break;
-
-            case 3:
-                newX++;
-                break;
+          case 0:
+            newY--;
+            break;
+          case 1:
+            newY++;
+            break;
+          case 2:
+            newX--;
+            break;
+          case 3:
+            newX++;
+            break;
         }
-        if(newY >= 0 &&
-           newY < this->sizeGridY &&
-           newX >= 0 &&
-           newX < this->sizeGridX) {
-            if(map[newY][newX] == ' ') {
-
-                map[oldY][oldX] = ' ';
-                if(enemy2 != nullptr) {
-                    map[newY][newX] = '4';
-                }
-                else {
-                    map[newY][newX] = '3';
-                }
-
-                this->enemies[i]->UpdateLocation(direction);
-                wmove(this->win, oldY, oldX);
-                wprintw(this->win, " ");
-                wmove(this->win, newY, newX);
-
-                if(enemy2 != nullptr) {
-                    printEntity(codeEntities::enemy2);
-                }
-                else {
-                    printEntity(codeEntities::enemy1);
-                }
-            }
-            else if(map[newY][newX] == '2') {
-
-                this->pl.liveschange(0);
-                this->updateLives();
-
-                map[oldY][oldX] = ' ';
-
-                int playerOldX = this->pl.getXLoc();
-                int playerOldY = this->pl.getYLoc();
-
-                this->pl.resetPosition();
-
-                map[playerOldY][playerOldX] = ' ';
-                map[this->pl.getYLoc()][this->pl.getXLoc()] = '2';
-                wmove(
-                    this->win,
-                    playerOldY,
-                    playerOldX
-                );
-
-                wprintw(this->win, " ");
-                wmove(
-                    this->win,
-                    this->pl.getYLoc(),
-                    this->pl.getXLoc()
-                );
-
-                printEntity(codeEntities::player);
-                wmove(
-                    this->win,
-                    oldY,
-                    oldX
-                );
-
-                if(enemy2 != nullptr) {
-                    printEntity(codeEntities::enemy2);
-                }
-                else {
-                    printEntity(codeEntities::enemy1);
-                }
-            }
+        // Controlla i limiti della mappa
+        if(newY >= 0 && newY < sizeGridY && newX >= 0 && newX < sizeGridX) {
+          //Controlla se il nemico può muoversi nella nuova posizione
+          if(map[newY][newX] == ' ') {
+            // Update map
+            map[oldY][oldX] = ' ';
+            if(enemy2 != nullptr) map[newY][newX] = '4';
+            else map[newY][newX] = '3';
+          
+            enemies[i]->UpdateLocation(direction);
+            // Erase enemy in old position
+            wmove(win, oldY, oldX);
+            wprintw(win, " ");
+            // Draw enemy in new position
+            wmove(win, newY, newX);
+            if(enemy2 != nullptr) printEntity(codeEntities::enemy2);
+            else printEntity(codeEntities::enemy1);
+          }
+          // Controlla se il nemico ha colpito il giocatore
+          else if(map[newY][newX] == '2') {
+            pl.liveschange(0);
+            updateLives();
+            pl.resetPosition();
+            // Update map
+            map[pl.getYLoc()][pl.getXLoc()] = '2';
+            map[oldY][oldX] = ' ';
+            if(enemy2 != nullptr) map[newY][newX] = '4';
+            else map[newY][newX] = '3';
+            // Erase enemy in old position
+            wmove(win, oldY, oldX);
+            wprintw(win, " ");
+            // Draw player in new position
+            wmove(win, pl.getYLoc(), pl.getXLoc());
+            printEntity(codeEntities::player);
+            // Draw enemy in new position
+            wmove(win, newY, newX);
+            if(enemy2 != nullptr) printEntity(codeEntities::enemy2);
+            else printEntity(codeEntities::enemy1);
+          }
         }
+        
+        current_lvl->updateMap(map);
+      }
     }
-
-    this->current_lvl->updateMap(map);
-
-    this->lastEnemyMoveTime = now;
-}{
-      //Logica di movimento nemici
-      // Controlla se il nemico ha colpito il giocatore
-    }
+    if(now - lastEnemyMoveTime >= ENEMY_SPEED) lastEnemyMoveTime = now;
 
     // Game over: il giocatore non ha più vite
-    if (this->pl.isdead()){
-      this->GameOver("GAME OVER!");
+    if (pl.isdead()){
+      GameOver("GAME OVER!");
       break;
     }
     
     // Game over: tempo scaduto
-    if (this->timeHandler.isTimeUp()) {
-      this->GameOver("TIME OUT!");
+    if (timeHandler.isTimeUp()) {
+      GameOver("TIME OUT!");
       break;
     }
 
     // Aggiorna a schermo il tempo rimasto
-    wmove(this->win, this->sizeGridY, this->sizeGridX - 12);
-    wprintw(this->win, "%s", ("Time: " + to_string(this->timeHandler.getRemainingTime()) + "  ").c_str());
+    updateTime();
 
-    wrefresh(this->win);
+    wrefresh(win);
     napms(10); // ~100 FPS
   }
 }
 
 void Game::GameOver(const char* msg) {
-  const int sidePanelX = this->sizeGridX + 3;
+  const int sidePanelX = sizeGridX + 3;
 
-  mvwprintw(this->win, 5, sidePanelX+3, "%s", msg);
-  mvwprintw(this->win, 7, sidePanelX+4, "You got");
-  mvwprintw(this->win, 9, sidePanelX+3, "%d points", this->score);
-  mvwprintw(this->win, 11, sidePanelX, "Insert your name:");
-  wmove(this->win, 12, sidePanelX + 4);
-  wrefresh(this->win);
+  mvwprintw(win, 5, sidePanelX+3, "%s", msg);
+  mvwprintw(win, 7, sidePanelX+4, "You got");
+  mvwprintw(win, 9, sidePanelX+3, "%d points", score);
+  mvwprintw(win, 11, sidePanelX, "Insert your name:");
+  wmove(win, 12, sidePanelX + 4);
+  wrefresh(win);
 
-  char name[18] = {};
-  nodelay(this->win, FALSE);
+  char name[8] = {};
+  nodelay(win, FALSE);
   echo();
   curs_set(1);
-  wmove(this->win, 12, sidePanelX + 4);
-  wgetnstr(this->win, name, sizeof(name) - 1);
+  wmove(win, 12, sidePanelX + 4);
+  wgetnstr(win, name, sizeof(name) - 1);
   noecho();
   curs_set(0);
-  nodelay(this->win, TRUE);
+  nodelay(win, TRUE);
 
   string playerName = name;
   if (playerName.empty()) playerName = "Anonimo";
-  this->classifica.addRecord(playerName, this->score);
-  mvwprintw(this->win, 14, sidePanelX, "Salvato in classifica");
-  wrefresh(this->win);
+  classifica.addRecord(playerName, score);
+  mvwprintw(win, 14, sidePanelX, "Salvato in classifica");
+  wrefresh(win);
 }
 
 void Game::startNewGame() {
-  this->loadLevels("config/levels.txt");
-  if(!this->isLoaded()) return;
-  this->pl = Player();
-  this->score = 0;
-  this->current_lvl->setTimerInitialize(true);
-  this->timeHandler.start(200); // Inizia timer (200 secondi a livello)
-  this->lastEnemyMoveTime = time(NULL);
-  this->drawLevel();
-  this->runTime();
+  loadLevels("config/levels.txt");
+  if(!isLoaded()) return;
+  pl = Player();
+  score = 0;
+  current_lvl->setTimerInitialize(true);
+  timeHandler.start(200); // Inizia timer (200 secondi a livello)
+  lastEnemyMoveTime = time(NULL);
+  drawLevel();
+  runTime();
   
 }
 
 bool Game::isLevelCompleted(){
-  Map m = this->current_lvl->getMap();
+  Map m = current_lvl->getMap();
   for(int i = 0; i < sizeGridY; i++){
     for(int j = 0; j < sizeGridX; j++){
       if(m[i][j]-48 == codeEntities::enemy1 || m[i][j]-48 == codeEntities::enemy2){
@@ -785,7 +840,7 @@ bool Game::isLevelCompleted(){
 }
 
 bool Game::isLevelCleared(){
-  Map m = this->current_lvl->getMap();
+  Map m = current_lvl->getMap();
   for(int i = 0; i < sizeGridY; i++){
     for(int j = 0; j < sizeGridX; j++){
       if(m[i][j]-48 ==  codeEntities::breakableWall || m[i][j]-48 == codeEntities::enemy1 || m[i][j]-48 == codeEntities::enemy2){
@@ -797,39 +852,50 @@ bool Game::isLevelCleared(){
 }
 
 void Game::updateLives(){
-  wmove(this->win, this->sizeGridY, 1);
-  wprintw(this->win, "        ");
-  wmove(this->win, this->sizeGridY, 1);
-  for (int i = 0; i < this->pl.getLives(); i++) {
+  wmove(win, sizeGridY, sizeGridX/2-2);
+  wprintw(win, "   ");
+  wmove(win, sizeGridY, sizeGridX/2-2);
+  for (int i = 0; i < pl.getLives(); i++) {
     printEntity(codeEntities::lives);
   }
 }
 
 void Game::drawNextGateway(bool open){
   if(open){
-    wmove(this->win, 9, 40);
+    wmove(win, 9, 40);
     printEntity(codeEntities::solidWall); // Disegna l'uscita
-    wmove(this->win, 10, 39);
-    wprintw(this->win, " ");
-    wmove(this->win, 11, 40);
+    wmove(win, 10, 39);
+    wprintw(win, " ");
+    wmove(win, 11, 40);
     printEntity(codeEntities::solidWall); // Disegna l'uscita
   } else {
     mvprintw(start_y+9, start_x+40, "%s", " ");
     mvprintw(start_y+11, start_x+40, "%s", " ");
-    wmove(this->win, 10, 39);
+    wmove(win, 10, 39);
     printEntity(codeEntities::solidWall);
   }
 }
 
 void Game::drawBackGateway(bool open){
   if(open){
-    wmove(this->win, 10, 0);
-    wprintw(this->win, "%s", " ");
-    mvprintw(start_y+9, start_x-1, "%s", this->getEntityChar(codeEntities::solidWall));
-    mvprintw(start_y+11, start_x-1, "%s", this->getEntityChar(codeEntities::solidWall));
+    wmove(win, 10, 0);
+    wprintw(win, "%s", " ");
+    mvprintw(start_y+9, start_x-1, "%s", getEntityChar(codeEntities::solidWall));
+    mvprintw(start_y+11, start_x-1, "%s", getEntityChar(codeEntities::solidWall));
   } else {
-    mvprintw(start_y+10, start_x, "%s", this->getEntityChar(codeEntities::solidWall));
+    mvprintw(start_y+10, start_x, "%s", getEntityChar(codeEntities::solidWall));
     mvprintw(start_y+9, start_x-1, " ");
     mvprintw(start_y+11, start_x-1, " ");
   }
+}
+
+void Game::updateTime(){
+  wmove(win, sizeGridY, sizeGridX - 10);
+  wprintw(win, "%s", ("Time: " + to_string(timeHandler.getRemainingTime()) + "  ").c_str());
+}
+
+void Game::updateScore(){
+  wmove(win, sizeGridY, 1);
+  string scoreStr = "Score: " + to_string(score) + "  ";
+  wprintw(win, "%s", scoreStr.c_str());
 }

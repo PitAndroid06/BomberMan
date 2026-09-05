@@ -14,12 +14,13 @@
 #include "enemy2.h"
 using namespace std;
 
-enum codeEntities{breakableWall, solidWall, player, enemy1, enemy2, bonus1, bonus2, bombAnimation1, bombAnimation2, explosion, lives};
+enum codeEntities{breakableWall, solidWall, player, enemy1, enemy2, bonus1, bonus2, bombAnimation1, bombAnimation2, explosion, lives, bulletLeft, bulletRight, bulletUp, bulletDown};
 
-const int CHARS_TO_DISPLAY = 11;
+const int CHARS_TO_DISPLAY = 15;
 const int MAX_ENEMIES = 10;
 const int DROP_CHANCE = 30;
-const int ENEMY_MOVE_INTERVAL = 1;
+const int ENEMY_SPEED = 2;
+const int BULLET_SPEED = 1;
 
 struct Entity{
   codeEntities codeEntity;
@@ -84,6 +85,9 @@ class Game{
 
     void drawNextGateway(bool open);
     void drawBackGateway(bool open);
+
+    void updateTime();
+    void updateScore();
 };
 
 #endif // BOMBERMAN_GAME_H
