@@ -13,7 +13,7 @@ public:
     int direction;
     bool active;
 
-    time_t lastMoveTime;
+    clock_t lastMoveTime;
 
     int gridWidth;
     int gridHeight;

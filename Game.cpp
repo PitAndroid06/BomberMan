@@ -5,14 +5,14 @@
 
 Caratteri per il gioco:
 
-player: ◉
-enemies: ▲, ■
-bonus1: ✪
-bonus2: ✚
-bombs: o, ●
-explosion: ✹
-walls: █, ░
-lives: ♥
+player: P
+enemies: M, W
+bonus1: $
+bonus2: +
+bombs: o, O
+explosion: *
+walls: #, %
+lives: V
 bulletLeft: <
 bulletRight: >
 bulletUp: ^
@@ -50,17 +50,17 @@ Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
   init_pair(7, COLOR_ORANGE, COLOR_BLACK);
 
 
-  AllEntitiesChar[0] = {codeEntities::breakableWall, "░", 1};
-  AllEntitiesChar[1] = {codeEntities::solidWall, "█", 2};
-  AllEntitiesChar[2] = {codeEntities::player, "◉", 3};
-  AllEntitiesChar[3] = {codeEntities::enemy1, "▲", 4};
-  AllEntitiesChar[4] = {codeEntities::enemy2, "■", 4};
+  AllEntitiesChar[0] = {codeEntities::breakableWall, "%", 1};
+  AllEntitiesChar[1] = {codeEntities::solidWall, "#", 2};
+  AllEntitiesChar[2] = {codeEntities::player, "P", 3};
+  AllEntitiesChar[3] = {codeEntities::enemy1, "M", 4};
+  AllEntitiesChar[4] = {codeEntities::enemy2, "W", 4};
   AllEntitiesChar[5] = {codeEntities::bombAnimation1, "o", 5};
-  AllEntitiesChar[6] = {codeEntities::bombAnimation2, "●", 5};
-  AllEntitiesChar[7] = {codeEntities::bonus1, "✪", 6};
-  AllEntitiesChar[8] = {codeEntities::bonus2, "✚", 3};
-  AllEntitiesChar[9] = {codeEntities::explosion, "✹", 7};
-  AllEntitiesChar[10] = {codeEntities::lives, "♥", 5};
+  AllEntitiesChar[6] = {codeEntities::bombAnimation2, "O", 5};
+  AllEntitiesChar[7] = {codeEntities::bonus1, "$", 6};
+  AllEntitiesChar[8] = {codeEntities::bonus2, "+", 3};
+  AllEntitiesChar[9] = {codeEntities::explosion, "*", 7};
+  AllEntitiesChar[10] = {codeEntities::lives, "V", 5};
   AllEntitiesChar[11] = {codeEntities::bulletLeft, "<", 5};
   AllEntitiesChar[12] = {codeEntities::bulletRight, ">", 5};
   AllEntitiesChar[13] = {codeEntities::bulletUp, "^", 5};
@@ -600,7 +600,7 @@ void Game::runTime(){
     }
 
     //move all enemies.
-    time_t now = time(NULL);
+    clock_t now = clock();
     Map map = current_lvl->getMap();
     for(int i = 0; i < currentEnemyCount; i++) {
 

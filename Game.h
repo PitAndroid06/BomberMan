@@ -19,8 +19,8 @@ enum codeEntities{breakableWall, solidWall, player, enemy1, enemy2, bonus1, bonu
 const int CHARS_TO_DISPLAY = 15;
 const int MAX_ENEMIES = 10;
 const int DROP_CHANCE = 30;
-const int ENEMY_SPEED = 2;
-const int BULLET_SPEED = 1;
+const int ENEMY_SPEED = CLOCKS_PER_SEC * 1;      // 1 secondo tra un passo e l'altro
+const int BULLET_SPEED = CLOCKS_PER_SEC / 5;     // 0.2 secondi per cella (5 celle/sec)
 
 struct Entity{
   codeEntities codeEntity;
@@ -45,7 +45,7 @@ class Game{
     BombHandler bombHandler;
     Item itemHandler;
     Time timeHandler;
-    time_t lastEnemyMoveTime;
+    clock_t lastEnemyMoveTime;
 
     void printEntity(codeEntities c);
     const char* getEntityChar(codeEntities c);
