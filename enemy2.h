@@ -6,7 +6,7 @@
 #define PLAYERENEMIES_ENEMY2_H
 
 #define BU 20
-#define BULLET_INTERVAL (CLOCKS_PER_SEC * 3)     // 3 secondi tra un colpo e l'altro
+#define BULLET_INTERVAL 10     // 3 secondi tra un colpo e l'altro
 
 #include "Enemy.h"
 #include "bullet.h"
@@ -17,7 +17,7 @@ class Enemy2 : public Enemy {
 
 private:
 
-  clock_t lastBulletTime;
+  time_t lastBulletTime;
 
   bullet* b[BU];
 

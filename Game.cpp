@@ -50,12 +50,12 @@ Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
   init_pair(7, COLOR_ORANGE, COLOR_BLACK);
 
 
-  AllEntitiesChar[0] = {codeEntities::breakableWall, "%", 1};
-  AllEntitiesChar[1] = {codeEntities::solidWall, "#", 2};
-  AllEntitiesChar[2] = {codeEntities::player, "P", 3};
+  AllEntitiesChar[1] = {codeEntities::solidWall, "█", 2};
+  AllEntitiesChar[0] = {codeEntities::breakableWall, "▒", 1};
+  AllEntitiesChar[2] = {codeEntities::player, "©", 3};
   AllEntitiesChar[3] = {codeEntities::enemy1, "M", 4};
   AllEntitiesChar[4] = {codeEntities::enemy2, "W", 4};
-  AllEntitiesChar[5] = {codeEntities::bombAnimation1, "o", 5};
+  AllEntitiesChar[5] = {codeEntities::bombAnimation1, "Ø", 5};
   AllEntitiesChar[6] = {codeEntities::bombAnimation2, "O", 5};
   AllEntitiesChar[7] = {codeEntities::bonus1, "$", 6};
   AllEntitiesChar[8] = {codeEntities::bonus2, "+", 3};
@@ -600,7 +600,7 @@ void Game::runTime(){
     }
 
     //move all enemies.
-    clock_t now = clock();
+    time_t now = time(NULL);
     Map map = current_lvl->getMap();
     for(int i = 0; i < currentEnemyCount; i++) {
 
@@ -721,6 +721,7 @@ void Game::runTime(){
             newX++;
             break;
         }
+        
         // Controlla i limiti della mappa
         if(newY >= 0 && newY < sizeGridY && newX >= 0 && newX < sizeGridX) {
           //Controlla se il nemico può muoversi nella nuova posizione
@@ -738,6 +739,7 @@ void Game::runTime(){
             wmove(win, newY, newX);
             if(enemy2 != nullptr) printEntity(codeEntities::enemy2);
             else printEntity(codeEntities::enemy1);
+
           }
           // Controlla se il nemico ha colpito il giocatore
           else if(map[newY][newX] == '2') {
@@ -759,6 +761,7 @@ void Game::runTime(){
             wmove(win, newY, newX);
             if(enemy2 != nullptr) printEntity(codeEntities::enemy2);
             else printEntity(codeEntities::enemy1);
+            enemies[i]->UpdateLocation(direction);
           }
         }
         
@@ -824,7 +827,6 @@ void Game::startNewGame() {
   lastEnemyMoveTime = time(NULL);
   drawLevel();
   runTime();
-  
 }
 
 bool Game::isLevelCompleted(){
@@ -853,7 +855,7 @@ bool Game::isLevelCleared(){
 
 void Game::updateLives(){
   wmove(win, sizeGridY, sizeGridX/2-2);
-  wprintw(win, "   ");
+  wprintw(win, "    ");
   wmove(win, sizeGridY, sizeGridX/2-2);
   for (int i = 0; i < pl.getLives(); i++) {
     printEntity(codeEntities::lives);

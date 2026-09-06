@@ -99,7 +99,7 @@ bool Enemy2::wallbetween(int playerX, int playerY, const Map map) {
 
 bullet* Enemy2::firebullet(int playerX, int playerY, const Map map) {
 
-    clock_t now = clock();
+    time_t now = time(NULL);
     if(now - lastBulletTime < BULLET_INTERVAL) {
         return nullptr;
     }
