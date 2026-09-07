@@ -1,6 +1,7 @@
 #ifndef PLAYERENEMIES_BULLET_H
 #define PLAYERENEMIES_BULLET_H
 
+#include <chrono>
 #include "Levels.h"
 #include "Player.h"
 
@@ -13,7 +14,7 @@ public:
     int direction;
     bool active;
 
-    time_t lastMoveTime;
+    std::chrono::steady_clock::time_point lastMoveTime;
 
     int gridWidth;
     int gridHeight;

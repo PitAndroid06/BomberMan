@@ -1,10 +1,11 @@
 #ifndef BOMBERMAN_GAME_H
 #define BOMBERMAN_GAME_H
 
-#include <ncurses.h>
-#include <iostream>
-#include <string>
+#include <curses.h>
+#include <chrono>
 #include <ctime>
+#include <cstring>
+#include <fstream>
 #include "Classifica.h"
 #include "Player.h"
 #include "Bomb.h"
@@ -19,8 +20,8 @@ enum codeEntities{breakableWall, solidWall, player, enemy1, enemy2, bonus1, bonu
 const int CHARS_TO_DISPLAY = 15;
 const int MAX_ENEMIES = 10;
 const int DROP_CHANCE = 20;
-const int ENEMY_SPEED = 1;      // 1 secondo tra un passo e l'altro
-const int BULLET_SPEED = 1;     // 1 secondo per cella (1 celle/sec)
+const int ENEMY_SPEED = 1000;   // 1000 millisecondi tra un passo e l'altro
+const int BULLET_SPEED = 500;   // 500 millisecondi per cella (0,5 celle/sec)
 
 struct Entity{
   codeEntities codeEntity;
@@ -31,6 +32,7 @@ struct Entity{
 class Game{
   private:
     WINDOW* win = nullptr;
+    bool terminalTooSmall = false;
     Lvl* current_lvl = nullptr;
     Classifica classifica;
     Entity AllEntitiesChar[CHARS_TO_DISPLAY];
@@ -45,22 +47,21 @@ class Game{
     BombHandler bombHandler;
     Item itemHandler;
     Time timeHandler;
-    time_t lastEnemyMoveTime;
+    std::chrono::steady_clock::time_point lastEnemyMoveTime;
 
     void printEntity(codeEntities c);
     const char* getEntityChar(codeEntities c);
     int getEntityColor(codeEntities c);
   public:
     Game(int start_x, int start_y, int width, int height);
-    ~Game();
 
     void drawLevel();
     
     int checkInput();
 
-    bool loadLevels(string file);
-    void loadClassifica(string file);
-    void saveClassifica(string file);
+    bool loadLevels(const char* file);
+    void loadClassifica(const char* file);
+    void saveClassifica(const char* file);
 
     int showMenu();
     void showClassifica(int page = 0, int rec_per_page = 5);
@@ -88,6 +89,8 @@ class Game{
 
     void updateTime();
     void updateScore();
+
+    void quitGame();
 };
 
 #endif // BOMBERMAN_GAME_H

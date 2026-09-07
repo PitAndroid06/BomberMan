@@ -1,5 +1,5 @@
 #include "Game.h"
-#include <fstream>
+#include <cstring>
 
 /*
 
@@ -37,8 +37,6 @@ Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
   start_color();
   use_default_colors();
 
-  short COLOR_ORANGE = 9;
-  init_color(COLOR_ORANGE, 500,500,0);
 
   //hanno un valore +1 rispetto a EntityChar perchè init_pair come primo attributo ha value >= 1
   init_pair(1, COLOR_WHITE, COLOR_BLACK);
@@ -47,7 +45,6 @@ Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
   init_pair(4, COLOR_BLUE, COLOR_BLACK);
   init_pair(5, COLOR_RED, COLOR_BLACK);
   init_pair(6, COLOR_YELLOW, COLOR_BLACK);
-  init_pair(7, COLOR_ORANGE, COLOR_BLACK);
 
 
   AllEntitiesChar[1] = {codeEntities::solidWall, "█", 2};
@@ -59,13 +56,18 @@ Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
   AllEntitiesChar[6] = {codeEntities::bombAnimation2, "O", 5};
   AllEntitiesChar[7] = {codeEntities::bonus1, "$", 6};
   AllEntitiesChar[8] = {codeEntities::bonus2, "+", 3};
-  AllEntitiesChar[9] = {codeEntities::explosion, "*", 7};
+  AllEntitiesChar[9] = {codeEntities::explosion, "*", 6};
   AllEntitiesChar[10] = {codeEntities::lives, "V", 5};
   AllEntitiesChar[11] = {codeEntities::bulletLeft, "<", 5};
   AllEntitiesChar[12] = {codeEntities::bulletRight, ">", 5};
   AllEntitiesChar[13] = {codeEntities::bulletUp, "^", 5};
   AllEntitiesChar[14] = {codeEntities::bulletDown, "v", 5};
   
+  const int requiredRows = initialY + gridHeight + 1;
+  const int requiredCols = initialX + gridWidth + 25;
+  if(LINES < requiredRows || COLS < requiredCols){
+    terminalTooSmall = true;
+  }
   win = newwin(gridHeight + 1, gridWidth + 25, initialY, initialX);
   keypad(win, TRUE); // Abilita tasti speciali (F1, frecce, ecc.)
   nodelay(win, TRUE);// getch ritorna -1 se non c'è input
@@ -92,7 +94,7 @@ int Game::getEntityColor(codeEntities c){
   return -1;
 }
 
-Game::~Game(){
+void Game::quitGame(){
   endwin();
   saveClassifica("config/scores.txt");
 }
@@ -106,10 +108,14 @@ int Game::checkInput(){
   return wgetch(win);
 }
 
-bool Game::loadLevels(string file){
+bool Game::loadLevels(const char* file){
   current_lvl = nullptr;
   fstream inputFile;
   inputFile.open(file);
+  if(!inputFile.is_open()){
+    char fallback[100] = "../";
+    inputFile.open(strcat(fallback, file));
+  }
   char ch;
   while(inputFile.get(ch)){
     Map map = new char*[sizeGridY];
@@ -132,7 +138,6 @@ bool Game::loadLevels(string file){
         map[row][col] = ch;
         col++;
       }catch(char Err){
-        cout<<"Errore nella lettura del file \""<<file<<"\": carattere \'"<<Err<<"\' non valido!"<<endl;
         break;
       }
     }
@@ -144,7 +149,6 @@ bool Game::loadLevels(string file){
         current_lvl = current_lvl->getNextLvl();
       }
     } else {
-      cout<<"Livello non caricato correttamente - Interrotto caricamento!"<<endl;
       return false;
     }
   }
@@ -155,13 +159,17 @@ bool Game::loadLevels(string file){
   return true;
 }
 
-void Game::loadClassifica(string file){
+void Game::loadClassifica(const char* file){
   fstream inputFile;
   inputFile.open(file);
+  if(!inputFile.is_open()){
+    char fallback[100] = "../";
+    inputFile.open(strcat(fallback, file));
+  }
   char ch;
   int stage = 0;
-  string nome = "";
-  string punteggio = "0";
+  char nome[8] = {};
+  char punteggio[8] = {};
   while(inputFile.get(ch)){
     if(ch == '\r' || ch == ' ')continue;
     if(ch == ','){
@@ -171,29 +179,43 @@ void Game::loadClassifica(string file){
     if(ch == '\n'){
       stage++;
       if(stage == 2){
-        classifica.addRecord(nome, stoi(punteggio));
+        int p = 0;
+        int ind = 0;
+        while(ind < strlen(punteggio)){
+          p = p * 10 + (punteggio[ind] - '0');
+          ind++;
+        }
+        classifica.addRecord(nome, p);
         stage = 0;
-        nome = "";
-        punteggio = "0";
+        nome[0] = '\0';
+        punteggio[0] = '\0';
       }
       continue;
     }
     if(stage == 0){
-      if(isalnum(ch))nome += ch;
+      int length = strlen(nome);
+      if(isalnum(ch)){
+        nome[length] = ch;
+        nome[length + 1] = '\0';
+      }
     } else if(stage == 1){
-      if(isdigit(ch))punteggio += ch;
+      int length = strlen(punteggio);
+      if(isdigit(ch)){
+        punteggio[length] = ch;
+        punteggio[length + 1] = '\0';
+      }
       else {
         while(inputFile.get(ch) && ch != '\n'){}
         stage = 0;
-        nome = "";
-        punteggio = "0";
+        nome[0] = '\0';
+        punteggio[0] = '\0';
       }
     }
   }
   inputFile.close();
 }
 
-void Game::saveClassifica(string file){
+void Game::saveClassifica(const char* file){
   ofstream outputFile;
   outputFile.open(file);
   record* r = classifica.getRecords();
@@ -286,8 +308,9 @@ void Game::drawLevel(){
   updateLives();
 
   //Disegna il numero del livello
-  string levelStr = "Level " + to_string(current_lvl->getLvlNumber());
-  mvprintw(start_y-1, start_x+32, "%s", levelStr.c_str());
+  const char* levelStr = "Level ";
+  mvprintw(start_y-1, start_x+32, "%s", levelStr);
+  mvprintw(start_y-1, start_x+38, "%d", current_lvl->getLvlNumber());
 
   // Stampa tempo iniziale
   updateTime();
@@ -299,6 +322,16 @@ void Game::drawLevel(){
 }
 
 int Game::showMenu(){
+  if(terminalTooSmall){
+    clear();
+    mvprintw(0, 0, "Terminal too small!");
+    mvprintw(1, 0, "Minimum display: 75 x 26.");
+    mvprintw(2, 0, "Current size: %d x %d.", COLS, LINES);
+    refresh();
+    while(checkInput() == -1){}
+    return 2;
+  }
+
   int ch;
   int choise = 0;
   int coord[3][2] = {{(sizeGridX/3)+1,(sizeGridY/4)},
@@ -315,7 +348,7 @@ int Game::showMenu(){
   mvwprintw(win, coord[0][1], coord[0][0]-3, ">  Nuova partita");
   mvwprintw(win, coord[1][1], coord[1][0]  , "Visualizza classifica");
   mvwprintw(win, coord[2][1], coord[2][0]  , "Esci dal gioco");
-  while((ch = checkInput()) != '\n'){
+  while((ch = checkInput()) != '\n' && ch != '\r' && ch != KEY_ENTER){
     if(ch == KEY_UP){
       mvwprintw(win, coord[choise][1], coord[choise][0]-3, " ");
       if(choise == 0) choise = 2;
@@ -337,24 +370,28 @@ void Game::showClassifica(int page, int rec_per_page){
   int pos = page*rec_per_page;
   for(int i = 0; i < pos; i++) r = r->next;
   do{
-    string rec = r->nome + "\t- " + to_string(r->punteggio);
+    char* rec = new char[20];
+    strcpy(rec, r->nome);
+    strcat(rec, "\t- ");
     if(pos < 3){
-      rec = to_string((pos%5)+1) + ". " + rec;
-      mvwprintw(win, (((pos%5)+1)*2), (sizeGridX/3), "%s", rec.c_str());
-    } else 
-    mvwprintw(win, (((pos%5)+1)*2), (sizeGridX/3)+3, "%s", rec.c_str());
+      mvwprintw(win, (((pos%5)+1)*2), (sizeGridX/3), "%d", (pos%5)+1);
+      wprintw(win, "%s", ". ");
+      wprintw(win, "%s", rec);
+    } else mvwprintw(win, (((pos%5)+1)*2), (sizeGridX/3)+3, "%s", rec);
+    wprintw(win, "%d", r->punteggio);
     pos++;
     r = r->next;
     if(r == nullptr) break;
   }while(pos%5 != 0);
-  string bar = "";
-  if(page != 0)bar += "< ";
-  else bar += "  ";
-  bar += "Page " + to_string(page+1);
-  if(r != nullptr)bar += " >";
-  mvwprintw(win, sizeGridY - 2, (sizeGridX/2)-(bar.length()/2), "%s", bar.c_str());
+  char* bar = new char[20];
+  if(page != 0) strcpy(bar, "< ");
+  else strcpy(bar, "  ");
+  strcat(bar, "Page ");
+  mvwprintw(win, sizeGridY - 2, (sizeGridX/2)-(strlen(bar)/2)-2, "%s", bar);
+  wprintw(win, "%d", (page+1));
+  if(r != nullptr) wprintw(win, " >");
   int ch;
-  while((ch = checkInput()) != '\n'){
+  while((ch = checkInput()) != '\n' && ch != '\r' && ch != KEY_ENTER){
     if(ch == KEY_LEFT){
       if(page != 0){
         showClassifica(page-1);
@@ -600,7 +637,7 @@ void Game::runTime(){
     }
 
     //move all enemies.
-    time_t now = time(NULL);
+    std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     Map map = current_lvl->getMap();
     for(int i = 0; i < currentEnemyCount; i++) {
 
@@ -640,7 +677,9 @@ void Game::runTime(){
 
           bullet* currentBullet = enemy2->getBullet(i);
           if(currentBullet != nullptr && currentBullet->active) {
-            if(now - currentBullet->lastMoveTime >= BULLET_SPEED) {
+            const std::chrono::milliseconds elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+              now - currentBullet->lastMoveTime);
+            if(elapsed.count() >= BULLET_SPEED) {
 
               // Erase bullet in old position
               if(map[currentBullet->yLoc][currentBullet->xLoc] == ' '){
@@ -698,7 +737,9 @@ void Game::runTime(){
       }
       
       //Update enemies
-      if(now - lastEnemyMoveTime >= ENEMY_SPEED) {
+        const std::chrono::milliseconds enemyElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+          now - lastEnemyMoveTime);
+        if(enemyElapsed.count() >= ENEMY_SPEED) {
         int oldX = enemies[i]->getXLoc();
         int oldY = enemies[i]->getYLoc();
         
@@ -768,7 +809,9 @@ void Game::runTime(){
         current_lvl->updateMap(map);
       }
     }
-    if(now - lastEnemyMoveTime >= ENEMY_SPEED) lastEnemyMoveTime = now;
+    const auto enemyElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+      now - lastEnemyMoveTime);
+    if(enemyElapsed.count() >= ENEMY_SPEED) lastEnemyMoveTime = now;
 
     // Game over: il giocatore non ha più vite
     if (pl.isdead()){
@@ -810,9 +853,8 @@ void Game::GameOver(const char* msg) {
   curs_set(0);
   nodelay(win, TRUE);
 
-  string playerName = name;
-  if (playerName.empty()) playerName = "Anonimo";
-  classifica.addRecord(playerName, score);
+  if (strlen(name) == 0) strcpy(name, "Anonimo");
+  classifica.addRecord(name, score);
   mvwprintw(win, 14, sidePanelX, "Salvato in classifica");
   wrefresh(win);
 }
@@ -824,7 +866,7 @@ void Game::startNewGame() {
   score = 0;
   current_lvl->setTimerInitialize(true);
   timeHandler.start(200); // Inizia timer (200 secondi a livello)
-  lastEnemyMoveTime = time(NULL);
+  lastEnemyMoveTime = std::chrono::steady_clock::now();
   drawLevel();
   runTime();
 }
@@ -893,11 +935,14 @@ void Game::drawBackGateway(bool open){
 
 void Game::updateTime(){
   wmove(win, sizeGridY, sizeGridX - 10);
-  wprintw(win, "%s", ("Time: " + to_string(timeHandler.getRemainingTime()) + "  ").c_str());
+  wprintw(win, "%s", "Time: ");
+  wprintw(win, "%d", timeHandler.getRemainingTime());
+  wprintw(win, "%s", "  ");
 }
 
 void Game::updateScore(){
   wmove(win, sizeGridY, 1);
-  string scoreStr = "Score: " + to_string(score) + "  ";
-  wprintw(win, "%s", scoreStr.c_str());
+  wprintw(win, "%s", "Score: ");
+  wprintw(win, "%d", score);
+  wprintw(win, "%s", "  ");
 }

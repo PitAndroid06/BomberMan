@@ -1,8 +1,8 @@
-#include <iostream>
+#include <cstring>
 using namespace std;
 
 struct record{
-  string nome;
+  char nome[8] = {};
   int punteggio;
   record* next = nullptr;
 };
@@ -12,6 +12,6 @@ class Classifica{
     record* rec;
   public:
     Classifica();
-    void addRecord(string name, int punteggio);
+    void addRecord(char name[8], int punteggio);
     record* getRecords();
 };

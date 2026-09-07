@@ -11,7 +11,7 @@
 #include "Enemy.h"
 #include "bullet.h"
 #include <ctime>
-#include <algorithm>
+#include <cstdlib>
 
 class Enemy2 : public Enemy {
 
@@ -28,7 +28,6 @@ private:
 public:
 
   Enemy2(int y, int x);
-  ~Enemy2();
 
   int choosePath() override;
 

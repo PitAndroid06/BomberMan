@@ -8,7 +8,6 @@ class Enemy {
 
   public:
     Enemy(int y, int x);
-    virtual ~Enemy() = default;
     void mvup();
     void mvdown();
     void mvleft();

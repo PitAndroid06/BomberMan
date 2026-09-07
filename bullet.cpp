@@ -46,7 +46,7 @@ bool bullet::move(const Map map) {
         deactivate();
         return false;
     }
-    lastMoveTime = time(NULL);
+    lastMoveTime = std::chrono::steady_clock::now();
     return true;
 }
 
@@ -68,7 +68,7 @@ void bullet::activate(int x, int y, int dir) {
     xLoc = x;
     yLoc = y;
     direction = dir;
-    lastMoveTime = time(NULL);
+    lastMoveTime = std::chrono::steady_clock::now();
 }
 
 void bullet::deactivate() {

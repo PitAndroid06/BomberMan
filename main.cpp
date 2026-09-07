@@ -1,4 +1,3 @@
-#include <ncurses.h>
 #include "Game.h"
 
 int main() {
@@ -11,11 +10,11 @@ int main() {
         } else if(c == 1){ //Visualizza classifica
             screen.showClassifica();
         } else if(c == 2){ //Esci dal gioco
-            screen.~Game();
+            screen.quitGame();
             return 0;
         }
     }
     
-    screen.~Game();
+    screen.quitGame();
     return 0;
 }

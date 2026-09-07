@@ -10,14 +10,6 @@ Enemy2::Enemy2(int y, int x)
     }
 }
 
-Enemy2::~Enemy2() {
-
-    for(int i = 0; i < BU; i++) {
-        delete b[i];
-        b[i] = nullptr;
-    }
-}
-
 int Enemy2::choosePath() {
 
     return rand() % 4;
@@ -65,8 +57,8 @@ bool Enemy2::wallbetween(int playerX, int playerY, const Map map) {
     // Stessa riga
     if (playerY == enemyY) {
 
-        int minX = std::min(enemyX, playerX);
-        int maxX = std::max(enemyX, playerX);
+        int minX = enemyX ? enemyX < playerX : playerX;
+        int maxX = enemyX ? enemyX > playerX : playerX;
 
         for(int x = minX + 1; x < maxX; x++) {
 
@@ -81,8 +73,8 @@ bool Enemy2::wallbetween(int playerX, int playerY, const Map map) {
     // Stessa colonna
     else if (playerX == enemyX) {
 
-        int minY = std::min(enemyY, playerY);
-        int maxY = std::max(enemyY, playerY);
+        int minY = enemyY < playerY ? enemyY : playerY;
+        int maxY = enemyY > playerY ? enemyY : playerY;
 
         for(int y = minY + 1; y < maxY; y++) {
 

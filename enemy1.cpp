@@ -3,7 +3,6 @@
 //
 
 #include "Enemy1.h"
-#include <cstdlib>
 
 Enemy1::Enemy1(int y, int x) : Enemy(y, x) {}
 

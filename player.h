@@ -4,7 +4,6 @@
 
 #ifndef PLAYERENEMIES_PLAYER_H
 #define PLAYERENEMIES_PLAYER_H
-#include <ncurses.h>
 #include <chrono>
 #include "Levels.h"
 
