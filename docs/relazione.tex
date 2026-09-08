@@ -1,0 +1,262 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage{geometry}
+\geometry{a4paper, top=3cm, bottom=3cm, left=2.5cm, right=2.5cm}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{pagecolor}
+\usepackage{sectsty}
+\usepackage[hidelinks]{hyperref}
+\usepackage{setspace}
+
+% Pacchetti per simulare graficamente "CodeSnap"
+\usepackage{tcolorbox}
+\tcbuselibrary{listings,skins}
+
+% ----- IMPOSTAZIONI COLORI RICHIESTI -----
+\definecolor{mainbg}{HTML}{F4F6FA}
+\definecolor{maintext}{HTML}{232323}
+\definecolor{accentblue}{HTML}{1A5276}
+\definecolor{accentgreen}{HTML}{117864}
+
+\pagecolor{mainbg}
+\color{maintext}
+\sectionfont{\color{accentblue}}
+\subsectionfont{\color{accentgreen}}
+
+% ----- IMPOSTAZIONI STILE CODICE (Simil-CodeSnap) -----
+\definecolor{codebackground}{rgb}{0.18, 0.18, 0.19}
+\definecolor{codecomment}{rgb}{0.40, 0.60, 0.40}
+\definecolor{codekeyword}{rgb}{0.30, 0.60, 0.90}
+\definecolor{codestring}{rgb}{0.80, 0.50, 0.30}
+
+\lstdefinestyle{moderncpp}{
+    language=C++,
+    backgroundcolor=\color{codebackground},   
+    commentstyle=\color{codecomment}\itshape,
+    keywordstyle=\color{codekeyword}\bfseries,
+    stringstyle=\color{codestring},
+    basicstyle=\ttfamily\footnotesize\color{white},
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=4,
+    numbers=none
+}
+
+% Creazione dell'ambiente che simula il riquadro grafico di CodeSnap
+\newtcblisting{codesnap}[1][]{
+  colback=codebackground,
+  colframe=black!80,
+  arc=3mm,
+  boxrule=0.5pt,
+  shadow={3mm}{-3mm}{0mm}{black!40}, 
+  listing only,
+  listing options={
+    style=moderncpp,
+    #1
+  },
+  overlay={
+    \fill[red!80!white] (frame.north west) ++(0.4cm,-0.3cm) circle (3pt);
+    \fill[yellow!80!white] (frame.north west) ++(0.7cm,-0.3cm) circle (3pt);
+    \fill[green!80!white] (frame.north west) ++(1.0cm,-0.3cm) circle (3pt);
+  },
+  top=10pt,
+  bottom=2pt,
+  left=5pt
+}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{3cm}
+    {\Huge \textbf{Relazione su Bomberman}}\\[1cm]
+    {\LARGE Architettura degli Elaboratori - 2025/2026}\\[3cm]
+    
+    \begin{tabular}{c c}
+        \textbf{Marco Rossi} & \textbf{Giulia Bianchi} \\
+        marco.rossi@studio.unibo.it & giulia.bianchi@studio.unibo.it \\[2cm]
+        \multicolumn{2}{c}{\textbf{Il Tuo Nome}} \\
+        \multicolumn{2}{c}{nome.cognome@studio.unibo.it}
+    \end{tabular}
+    
+    \vfill
+    {\large \today}
+\end{titlepage}
+
+\setstretch{1.4}
+
+% ==========================================
+% INTRODUZIONE E LAVORO CONDIVISO
+% ==========================================
+\section{Introduzione}
+Il nostro progetto \`e un clone di Bomberman sviluppato per essere giocato interamente nel terminale. Per la grafica testuale e i comandi da tastiera abbiamo usato la libreria \texttt{ncurses}. 
+Per rispettare le regole del corso, abbiamo fatto a meno di qualsiasi funzione o classe della Standard Template Library (STL). Non c'\`e traccia di \texttt{std::string} o \texttt{std::vector}; abbiamo implementato le liste a mano con i puntatori e gestito i testi avendo array di \texttt{char}.
+
+Per tenere il codice ordinato e facilitare la stampa a schermo, abbiamo creato una struct globale che unisce l'oggetto logico (muri, player, nemici) al suo carattere ASCII e al suo colore.
+\begin{codesnap}
+struct Entity{
+  codeEntities codeEntity;
+  const char* ch;
+  int colorPair;
+};
+\end{codesnap}
+
+Inoltre abbiamo usato \texttt{nodelay()} per l'input. Volevamo un gioco fluido in tempo reale, quindi non potevamo permettere che il programma si fermasse ad aspettare la pressione di un tasto (che \`e quello che fa \texttt{getch()} di base). Con \texttt{nodelay}, il loop del gioco va avanti in background e aggiorna nemici e bombe senza bloccarsi.
+
+% ==========================================
+% COMPONENTE 1
+% ==========================================
+\section{Gestione entit\`a di gioco (Marco Rossi)}
+Nella mia parte mi sono occupato dei movimenti e dei nemici. Tutto viene gestito dal file \texttt{Game.cpp} che interroga le classi a ogni ciclo.
+
+Il \textbf{Player} \`e la classe per il giocatore. Per gestire i movimenti, prima di spostare le coordinate guardo cosa c'\`e nella cella di destinazione sulla mappa. Se c'\`e un muro, il movimento viene annullato e il giocatore resta fermo. Oltre a muoversi, la classe gestisce la vita e un periodo di invulnerabilit\`a temporanea che si attiva appena si subisce un danno, cosi si evitano morti a catena.
+
+Per i nemici ho usato l'ereditariet\`a. Ho creato una classe base \textbf{\texttt{Enemy}} da cui ho derivato due tipi di avversari:
+\begin{itemize}
+    \item \textbf{Enemy1}: Un nemico abbastanza semplice che segue il giocatore cercando di andargli addosso aggirando gli ostacoli.
+    \item \textbf{Enemy2}: Un po' pi\`u difficile. Oltre a muoversi, ogni tot di tempo genera un proiettile (bullet).
+\end{itemize}
+
+I proiettili li gestisco separatamente dai nemici in un loro array indipendente. In questo modo se il nemico che ha sparato muore, il proiettile continua ad andare dritto finch\'e non va fuori schermo o colpisce un muro e viene distrutto.
+\begin{codesnap}
+bool bullet::iswall(int x, int y, const Map map) {
+    if (x < 0 || x >= gridWidth || y < 0 || y >= gridHeight) {
+        return true;
+    }
+    // Arresta la traiettoria all'impatto coi muri ('0' e '1')
+    return map[y][x] == '0' || map[y][x] == '1';
+}
+\end{codesnap}
+
+Un problema bello grosso \`e stato rendere fluido il movimento. Usando \texttt{time(NULL)} contavo solo in secondi interi, e il risultato era che i nemici andavano avanti a scatti enormi ogni secondo esatto. 
+Avendo questo problema mi sono avvalso di una LLM per capire come risolvere il problema in C++.
+
+\textit{Prompt usato: "Come faccio in C++ a contare i millisecondi invece dei secondi? time(NULL) mi da solo i secondi interi e i nemici si muovono a scatti."}
+
+Mi ha suggerito di usare \texttt{std::chrono}, che conta i millisecondi. In questo modo ho potuto avere movimenti fluidi.
+\begin{codesnap}
+const auto enemyElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+  now - lastEnemyMoveTime);
+if(enemyElapsed.count() >= ENEMY_SPEED) lastEnemyMoveTime = now;
+\end{codesnap}
+
+
+% ==========================================
+% COMPONENTE 2
+% ==========================================
+\newpage
+\section{Gestione mappa e livelli (Giulia Bianchi)}
+Io ho gestito la mappa del gioco e il caricamento dei livelli. Avendo il divieto di usare i vector, ho risolto allocando dinamicamente a mano (con \texttt{new}) un array di puntatori a char (\texttt{char**}).
+
+La cosa pi\`u difficile era che il prof chiedeva la persistenza dei livelli: se spacchi un muro nel livello 1 e vai nel livello 2, quando torni indietro il muro deve essere ancora rotto.
+Per risolverla ho implementato una \textbf{lista doppiamente concatenata}.
+Ogni livello \`e un \texttt{Lvl}, e dentro ci ho messo due puntatori: uno che punta al livello dopo e uno che punta al livello prima.
+
+\begin{codesnap}
+class Lvl{
+  private:
+    Map map;
+    Lvl* nextLvl;
+    Lvl* precLvl;
+    int LvlNumber;
+    bool timerInitialize = false; 
+    void setNextLvl(Lvl* nextLvl);
+    void setPrecLvl(Lvl* precLvl);
+  public:
+    // costruttori e getters
+};
+\end{codesnap}
+
+Cos\`i facendo, quando entri in una porta, il gioco sposta solo il puntatore \texttt{current\_lvl} in avanti o all'indietro nella lista. La memoria della stanza rimane esattamente com'era e non viene ricaricata da zero.
+
+Inizialmente volevamo usare stanze generate a caso (procedurali). Ne abbiamo parlato con l'IA ma ci siamo resi conto che aggiungere stanze a caso alla lista senza mai cancellarle ci avrebbe prima o poi saturato la RAM. Quindi abbiamo deciso di usare dei livelli fissi presi dal file \texttt{levels.txt}.
+Ho avuto per\`o un problema di crash se aprivo il gioco da una cartella sbagliata (es. da bin) perch\'e non trovava \texttt{levels.txt}. Non potendo usare std::string ho chiesto alla LLM un modo per risolvere.
+
+\textit{Prompt usato: "Il gioco crasha se lo apro dalla cartella bin perch\'e non trova levels.txt. Come faccio ad aggiungere '../' prima del nome del file come fallback senza usare std::string?"}
+
+Mi ha suggerito un trick per aggiungere \texttt{../} al percorso usando \texttt{strcat} del C se il file non si apre subito.
+\begin{codesnap}
+fstream inputFile;
+inputFile.open(file);
+if(!inputFile.is_open()){
+  char fallback[100] = "../";
+  inputFile.open(strcat(fallback, file));
+}
+\end{codesnap}
+
+
+% ==========================================
+% COMPONENTE 3
+% ==========================================
+\newpage
+\section{Gestione Bombe, Items e Dati (Zaccari Goumri)}
+L'ultima parte del gioco riguarda le bombe, i potenziamenti e la classifica.
+
+\subsection{Logica delle Bombe}
+La classe \texttt{BombHandler} si occupa di far esplodere le bombe. A fine timer, la bomba genera un'onda d'urto a croce e io devo controllare le celle sulla matrice per capire cosa distruggere. Se l'onda colpisce un muro solido, deve fermarsi e non fare danni dietro. Se l'onda colpisce un muro distruttibile, lo spacca avendo la possibilit\`a di lasciare per terra un bonus che pu\`o essere una vita extra che viene aggiunta nel ciclo in runtime oppure un powerup per la bomba che ti permette di avere un raggio maggiore per 15sec (gestito dalla classe Item).
+
+All'inizio il raggio dell'esplosione passava attraverso i muri solidi danneggiando tutto, ignorando praticamente le collisioni.
+Mi sono bloccato su questa logica e ho usufruito di una LLM per capire come fare. 
+
+\textit{Prompt usato: "L'onda d'urto della mia bomba passa attraverso i muri solidi e distrugge tutto ignorando le collisioni. Come faccio a farla fermare quando incontra il carattere '1' nella matrice?"}
+
+Mi ha suggerito di usare un ciclo iterativo per ogni direzione cardinale e di fermare il ciclo con il comando \texttt{break} non appena incontravo un muro. 
+\begin{codesnap}
+for (int dir = 0; dir < 4; dir++) {
+    for (int step = 1; step <= r; step++) {
+        int nx = bx + dx[dir] * step;
+        int ny = by + dy[dir] * step;
+
+        if (nx < 0 || nx >= gridW || ny < 0 || ny >= gridH) {
+            break; // per evitare di leggere fuori memoria
+        }
+        
+        if (map[ny][nx] == '1') {
+            break; // Contro il muro solido l'esplosione si ferma!
+        }
+        
+        if (numExplosionCells < MAX_EXPLOSION_CELLS) {
+            explosionCells[numExplosionCells++] = {nx, ny};
+        }
+    }
+}
+\end{codesnap}
+Come si vede nel codice, grazie a quel \texttt{break} l'onda si ferma e funziona esattamente come nel gioco originale. L'esplosione viene poi disegnata dal loop principale leggendo l'array \texttt{explosionCells} e poi reimposta il timer della bomba a mezzo secondo (tempo di visualizzazione dell'esplosione), la bomba continua a decrementare ritornando a 0 dove poi in runtime si cancella l'esplosione.
+
+\subsection{Items e Game Design}
+Come \`e stato accennato prima i potenziamenti che il giocatore pu\`o raccogliere distruggendo i muri sono due: il \textbf{Raggio Aumentato} (che potenzia il raggio delle bombe) e la \textbf{Vita Extra}. 
+Per bilanciare la difficolt\`a, ho inserito un controllo logico che impedisce di accumulare infinite vite, bloccando il massimo ottenibile a 4 vite.
+
+Un altro aspetto puro di game design di cui mi sono occupato \`e stato lo \textbf{spawn rate} degli Item. E' stata impostata una percentuale fissa che determina la probabilit\`a che un muro fragile, una volta distrutto da una bomba, rilasci un bonus. Questo evita che la mappa si riempia di potenziamenti rovinando la sfida.
+
+\subsection{Gestione del Tempo}
+Oltre ai bonus e alle bombe, ho gestito la logica del \textbf{Tempo}. Ogni livello ha un limite di secondi prestabilito per essere completato (200 secondi), costringendo il giocatore a non rimanere fermo troppo a lungo. Il timer viene calcolato e aggiornato a schermo in parallelo col resto del gioco, e se raggiunge lo zero scatta immediatamente il Game Over. Il tempo rimanente di ogni livello viene aggiunto a quello del livello sucessivo.
+
+\subsection{Salvataggio Punteggi}
+Ci sono 2 modi per ottenere punti nel gioco e salire in classifica: uccidere i mostri e spaccare i muri distruttibili. Inoltre abbiamo voluto aggiungere anche la possibilità di ottenere punti dai secondi rimasti al completamento dell'ultimo livello dando una sfida in piu al giocatore per cercare di completare il gioco il piu veloce possibile.
+
+I \textit{records} della classifica sono salvati nel file di gioco \textbf{scores.txt} come nomegiocatore, punteggio. Vengono letti e messi in ordine decrescente all'inizio del gioco e quando il gioco finisce e l'utente digita il proprio nome viene inserito in coda al file.
+\begin{codesnap}
+    void Game::saveClassifica(const char* file){
+      ofstream outputFile;
+      outputFile.open(file);
+      record* r = classifica.getRecords();
+      while(r != nullptr){
+        outputFile << r->nome << ", " << r->punteggio << endl;
+        r = r->next;
+      }
+      outputFile.close();
+    }
+\end{codesnap}
+
+\section{Conclusioni}
+Lo sviluppo di questo progetto ci ha permesso di mettere in pratica i concetti studiati durante il corso.
+Per quanto riguarda il supporto dell'Intelligenza Artificiale, il suo impiego si \`e rivelato estremamente utile per sbloccare le fasi di stallo durante lo sviluppo. Ci siamo avvalsi della LLM (Gemini e/o Claude) principalmente per ricevere consigli logici quando non sapevamo come aggirare un limite tecnico, per farci aiutare nella risoluzione di bug e scoprire da cosa erano causati.
+
+Link video illustrativo del gioco: \href{https://drive.google.com/file/d/1Xkvq53LNjwL0HlNmUK7vDq5v5aAl7pTv/view?usp=drive_link}{clicca qui}
+\end{document}
