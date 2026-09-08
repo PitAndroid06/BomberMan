@@ -5,11 +5,11 @@
 
 Caratteri per il gioco:
 
-player: P
+player: @
 enemies: M, W
 bonus1: $
 bonus2: +
-bombs: o, O
+bombs: 0, O
 explosion: *
 walls: #, %
 lives: V
@@ -37,9 +37,9 @@ Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
   start_color();
   use_default_colors();
 
-
   //hanno un valore +1 rispetto a EntityChar perchè init_pair come primo attributo ha value >= 1
-  init_pair(1, COLOR_WHITE, COLOR_BLACK);
+  
+  init_pair(1, COLOR_BLACK, COLOR_BLACK);
   init_pair(2, COLOR_WHITE, COLOR_WHITE);
   init_pair(3, COLOR_GREEN, COLOR_BLACK);
   init_pair(4, COLOR_BLUE, COLOR_BLACK);
@@ -47,12 +47,12 @@ Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
   init_pair(6, COLOR_YELLOW, COLOR_BLACK);
 
 
-  AllEntitiesChar[1] = {codeEntities::solidWall, "█", 2};
-  AllEntitiesChar[0] = {codeEntities::breakableWall, "▒", 1};
-  AllEntitiesChar[2] = {codeEntities::player, "©", 3};
+  AllEntitiesChar[0] = {codeEntities::breakableWall, "%", 1};
+  AllEntitiesChar[1] = {codeEntities::solidWall, " ", 2};
+  AllEntitiesChar[2] = {codeEntities::player, "@", 3};
   AllEntitiesChar[3] = {codeEntities::enemy1, "M", 4};
   AllEntitiesChar[4] = {codeEntities::enemy2, "W", 4};
-  AllEntitiesChar[5] = {codeEntities::bombAnimation1, "Ø", 5};
+  AllEntitiesChar[5] = {codeEntities::bombAnimation1, "0", 5};
   AllEntitiesChar[6] = {codeEntities::bombAnimation2, "O", 5};
   AllEntitiesChar[7] = {codeEntities::bonus1, "$", 6};
   AllEntitiesChar[8] = {codeEntities::bonus2, "+", 3};
@@ -75,9 +75,11 @@ Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
 
 void Game::printEntity(codeEntities c){
   int color = getEntityColor(c);
-  wattron(win, COLOR_PAIR(color));
+  if(color == 1) wattron(win, COLOR_PAIR(color) | A_BOLD);
+  else wattron(win, COLOR_PAIR(color));
   wprintw(win, "%s", getEntityChar(c));
-  wattroff(win, COLOR_PAIR(color));
+  if(color == 1) wattroff(win, COLOR_PAIR(color) | A_BOLD);
+  else wattroff(win, COLOR_PAIR(color));
 }
 
 const char* Game::getEntityChar(codeEntities c){
@@ -924,10 +926,13 @@ void Game::drawBackGateway(bool open){
   if(open){
     wmove(win, 10, 0);
     wprintw(win, "%s", " ");
+    attron(COLOR_PAIR(getEntityColor(codeEntities::solidWall)));
     mvprintw(start_y+9, start_x-1, "%s", getEntityChar(codeEntities::solidWall));
     mvprintw(start_y+11, start_x-1, "%s", getEntityChar(codeEntities::solidWall));
+    attroff(COLOR_PAIR(getEntityColor(codeEntities::solidWall)));
   } else {
-    mvprintw(start_y+10, start_x, "%s", getEntityChar(codeEntities::solidWall));
+    wmove(win, start_y+10, start_x);
+    printEntity(codeEntities::solidWall);
     mvprintw(start_y+9, start_x-1, " ");
     mvprintw(start_y+11, start_x-1, " ");
   }

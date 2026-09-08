@@ -57,8 +57,8 @@ bool Enemy2::wallbetween(int playerX, int playerY, const Map map) {
     // Stessa riga
     if (playerY == enemyY) {
 
-        int minX = enemyX ? enemyX < playerX : playerX;
-        int maxX = enemyX ? enemyX > playerX : playerX;
+        int minX = (enemyX < playerX) ? enemyX : playerX;
+        int maxX = (enemyX > playerX) ? enemyX : playerX;
 
         for(int x = minX + 1; x < maxX; x++) {
 
@@ -73,8 +73,8 @@ bool Enemy2::wallbetween(int playerX, int playerY, const Map map) {
     // Stessa colonna
     else if (playerX == enemyX) {
 
-        int minY = enemyY < playerY ? enemyY : playerY;
-        int maxY = enemyY > playerY ? enemyY : playerY;
+        int minY = (enemyY < playerY) ? enemyY : playerY;
+        int maxY = (enemyY > playerY) ? enemyY : playerY;
 
         for(int y = minY + 1; y < maxY; y++) {
 
