@@ -8,8 +8,8 @@
 #define BU 20
 #define BULLET_INTERVAL 10     // 3 secondi tra un colpo e l'altro
 
-#include "Enemy.h"
-#include "bullet.h"
+#include "Enemy.hpp"
+#include "bullet.hpp"
 #include <ctime>
 #include <cstdlib>
 

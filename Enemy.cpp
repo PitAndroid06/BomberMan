@@ -1,4 +1,4 @@
-#include "Enemy.h"
+#include "Enemy.hpp"
 
 Enemy::Enemy(int y, int x) : yLoc(y), xLoc(x) {}
 

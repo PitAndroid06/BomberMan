@@ -1,4 +1,4 @@
-#include "Classifica.h"
+#include "Classifica.hpp"
 
 Classifica::Classifica(){
   rec = nullptr;

@@ -2,7 +2,7 @@
 // Created by simone on 12/10/25.
 //
 
-#include "Enemy.h"
+#include "Enemy.hpp"
 #include <cstdlib>
 
 class Enemy1 : public Enemy {

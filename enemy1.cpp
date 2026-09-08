@@ -2,7 +2,7 @@
 // Created by simone on 12/10/25.
 //
 
-#include "Enemy1.h"
+#include "Enemy1.hpp"
 
 Enemy1::Enemy1(int y, int x) : Enemy(y, x) {}
 

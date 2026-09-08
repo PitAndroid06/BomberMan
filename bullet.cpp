@@ -1,4 +1,4 @@
-#include "bullet.h"
+#include "bullet.hpp"
 
 bullet::bullet(int x, int y, int dir, int sizeGridX, int sizeGridY) {
 

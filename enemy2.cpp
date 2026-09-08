@@ -1,4 +1,4 @@
-#include "Enemy2.h"
+#include "Enemy2.hpp"
 
 Enemy2::Enemy2(int y, int x)
     : Enemy(y, x) {

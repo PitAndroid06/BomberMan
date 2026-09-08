@@ -1,4 +1,4 @@
-#include "Levels.h"
+#include "Levels.hpp"
 
 Lvl::Lvl(){
   map = nullptr;

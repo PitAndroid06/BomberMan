@@ -1,4 +1,4 @@
-#include "Bomb.h"
+#include "Bomb.hpp"
 #include <cstdlib>
 
 BombHandler::BombHandler(int gridWidth, int gridHeight) {
@@ -23,7 +23,7 @@ bool BombHandler::placeBomb(int x, int y, int raggio, int timer) {
     return true;
 }
 
-//Returns true if the bomb has exploded or has finished its animation, false otherwise
+//Restituisce true se la bomba esplode o finisce il tempo di animazione dell'esplosione.
 bool BombHandler::update(const Map map) {
     if (!activeBomb.isActive) return false;
 

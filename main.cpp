@@ -1,4 +1,4 @@
-#include "Game.h"
+#include "Game.hpp"
 
 int main() {
     Game screen(10, 5, 40, 20);

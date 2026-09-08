@@ -1,4 +1,4 @@
-#include "Game.h"
+#include "Game.hpp"
 #include <cstring>
 
 /*
@@ -11,7 +11,7 @@ bonus1: $
 bonus2: +
 bombs: 0, O
 explosion: *
-walls: #, %
+walls: ' ', %
 lives: V
 bulletLeft: <
 bulletRight: >
@@ -38,7 +38,6 @@ Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
   use_default_colors();
 
   //hanno un valore +1 rispetto a EntityChar perchè init_pair come primo attributo ha value >= 1
-  
   init_pair(1, COLOR_BLACK, COLOR_BLACK);
   init_pair(2, COLOR_WHITE, COLOR_WHITE);
   init_pair(3, COLOR_GREEN, COLOR_BLACK);
@@ -73,6 +72,7 @@ Game::Game(int initialX, int initialY, int gridWidth, int gridHeight)
   nodelay(win, TRUE);// getch ritorna -1 se non c'è input
 }
 
+//Disegna il carattere corrispondente all'entity c, con il colore corretto
 void Game::printEntity(codeEntities c){
   int color = getEntityColor(c);
   if(color == 1) wattron(win, COLOR_PAIR(color) | A_BOLD);
@@ -96,20 +96,24 @@ int Game::getEntityColor(codeEntities c){
   return -1;
 }
 
+//Chiude il gioco, salvando la classifica
 void Game::quitGame(){
   endwin();
   saveClassifica("config/scores.txt");
 }
 
+//Verifica se i livelli sono stati caricati correttamente
 bool Game::isLoaded(){
   if(current_lvl == nullptr)return false;
   else return true;
 }
 
+//Verifica input da tastiera
 int Game::checkInput(){
   return wgetch(win);
 }
 
+//Carica i livelli da file
 bool Game::loadLevels(const char* file){
   current_lvl = nullptr;
   fstream inputFile;
@@ -161,6 +165,7 @@ bool Game::loadLevels(const char* file){
   return true;
 }
 
+//Carica la classifica da file
 void Game::loadClassifica(const char* file){
   fstream inputFile;
   inputFile.open(file);
@@ -217,6 +222,7 @@ void Game::loadClassifica(const char* file){
   inputFile.close();
 }
 
+//Salva la classifica su file
 void Game::saveClassifica(const char* file){
   ofstream outputFile;
   outputFile.open(file);
@@ -228,6 +234,7 @@ void Game::saveClassifica(const char* file){
   outputFile.close();
 }
 
+//Disegna il livello corrente, con tutti i suoi elementi
 void Game::drawLevel(){
   Map m = current_lvl->getMap();
   bool drawedPlayer = false;
@@ -323,6 +330,7 @@ void Game::drawLevel(){
   refresh();
 }
 
+//Mostra il menù iniziale
 int Game::showMenu(){
   if(terminalTooSmall){
     clear();
@@ -365,6 +373,7 @@ int Game::showMenu(){
   return choise;
 }
 
+//Mostra la classifica, con possibilità di scorrere le pagine
 void Game::showClassifica(int page, int rec_per_page){
   wclear(win);
   record* r = classifica.getRecords();
@@ -408,24 +417,27 @@ void Game::showClassifica(int page, int rec_per_page){
   }
 }
 
+//Vai al livello successivo
 bool Game::goToNextLevel(){
   if(current_lvl->isLast()) return false;
   else current_lvl = current_lvl->getNextLvl();
   return true;
 }
 
+//Vai al livello precedente
 bool Game::goToPrecLevel(){
   if(current_lvl->isFirst()) return false;
   else current_lvl = current_lvl->getPrecLvl();
   return true;
 }
 
+//Funzione principale del gioco, gestisce input, movimento e logica di gioco
 void Game::runTime(){
   int ch;
   while(1){
     ch = checkInput();
     if(ch == 'q') break;
-    //character movement
+    //Gestione del movimento del giocatore
     else if(ch != -1){
       int x = pl.getXLoc();
       int y = pl.getYLoc();
@@ -449,7 +461,7 @@ void Game::runTime(){
           }
         }
         
-        //Go to the next level if the player reaches the exit point (40, 10)
+        //Vai al prossimo livello se il giocatore ha raggiunto le coordinate (40, 10) o (-1, 10)
         if((nextX == 40 || nextX == -1) && nextY == 10){
           bool isCleared = isLevelCleared();
           if(nextX == 40){
@@ -595,6 +607,7 @@ void Game::runTime(){
         current_lvl->updateMap(update);
         wrefresh(win);
       }
+      
       // La bomba ha finito il tempo di animazione dell'esplosione
       else {
 
@@ -638,18 +651,18 @@ void Game::runTime(){
       }
     }
 
-    //move all enemies.
+    //Gestione del movimento dei nemici e dei proiettili.
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
     Map map = current_lvl->getMap();
     for(int i = 0; i < currentEnemyCount; i++) {
 
       Enemy2* enemy2 = dynamic_cast<Enemy2*>(enemies[i]);
 
-      //Update bullets
+      //Se il nemico è un enemy2
       if(enemy2 != nullptr) {
         bullet* newBullet = enemy2->firebullet(pl.getXLoc(), pl.getYLoc(), map);
 
-        //Draw new bullet
+        //Disegna il nuovo proiettile
         if(newBullet != nullptr) {
           wmove(win, newBullet->yLoc, newBullet->xLoc);
           switch(newBullet->direction) {
@@ -673,7 +686,7 @@ void Game::runTime(){
           current_lvl->updateMap(map);
         }
 
-        //Update bullets
+        //Aggiorna proiettili
         int index = 0;
         for(int i = 0; i < BU; i++){
 
@@ -683,7 +696,7 @@ void Game::runTime(){
               now - currentBullet->lastMoveTime);
             if(elapsed.count() >= BULLET_SPEED) {
 
-              // Erase bullet in old position
+              // Cancella il proiettile nella vecchia posizione
               if(map[currentBullet->yLoc][currentBullet->xLoc] == ' '){
                 currentBullet->deactivate();
                 continue;
@@ -705,13 +718,13 @@ void Game::runTime(){
                   updateLives();
                   map[pl.getYLoc()][pl.getXLoc()] = '2';
 
-                  // Draw player in new position
+                  // Disegna il giocatore alla nuova posizione
                   wmove(win, pl.getYLoc(), pl.getXLoc());
                   printEntity(codeEntities::player);
                 }
               } else {
 
-                // Draw bullet in new position
+                // Disegna il proiettile alla nuova posizione
                 wmove(win, currentBullet->yLoc, currentBullet->xLoc);
                 switch(currentBullet->direction) {
                   case 0: // Up
@@ -738,7 +751,7 @@ void Game::runTime(){
         current_lvl->updateMap(map);
       }
       
-      //Update enemies
+      //Muovi i nemici
         const std::chrono::milliseconds enemyElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
           now - lastEnemyMoveTime);
         if(enemyElapsed.count() >= ENEMY_SPEED) {
@@ -769,16 +782,16 @@ void Game::runTime(){
         if(newY >= 0 && newY < sizeGridY && newX >= 0 && newX < sizeGridX) {
           //Controlla se il nemico può muoversi nella nuova posizione
           if(map[newY][newX] == ' ') {
-            // Update map
+            // Aggiorna map
             map[oldY][oldX] = ' ';
             if(enemy2 != nullptr) map[newY][newX] = '4';
             else map[newY][newX] = '3';
           
             enemies[i]->UpdateLocation(direction);
-            // Erase enemy in old position
+            // Cancella il nemico alla vecchia posizione
             wmove(win, oldY, oldX);
             wprintw(win, " ");
-            // Draw enemy in new position
+            // Disegna il nemico alla nuova posizione
             wmove(win, newY, newX);
             if(enemy2 != nullptr) printEntity(codeEntities::enemy2);
             else printEntity(codeEntities::enemy1);
@@ -789,18 +802,18 @@ void Game::runTime(){
             pl.liveschange(0);
             updateLives();
             pl.resetPosition();
-            // Update map
+            // aggiorna map
             map[pl.getYLoc()][pl.getXLoc()] = '2';
             map[oldY][oldX] = ' ';
             if(enemy2 != nullptr) map[newY][newX] = '4';
             else map[newY][newX] = '3';
-            // Erase enemy in old position
+            // Cancella il nemico alla vecchia posizione
             wmove(win, oldY, oldX);
             wprintw(win, " ");
-            // Draw player in new position
+            // Disegna il giocatore alla nuova posizione
             wmove(win, pl.getYLoc(), pl.getXLoc());
             printEntity(codeEntities::player);
-            // Draw enemy in new position
+            // Disegna il nemico alla nuova posizione
             wmove(win, newY, newX);
             if(enemy2 != nullptr) printEntity(codeEntities::enemy2);
             else printEntity(codeEntities::enemy1);
@@ -835,6 +848,7 @@ void Game::runTime(){
   }
 }
 
+//Gestisce la schermata di fine partita
 void Game::GameOver(const char* msg) {
   const int sidePanelX = sizeGridX + 3;
 
@@ -861,6 +875,7 @@ void Game::GameOver(const char* msg) {
   wrefresh(win);
 }
 
+//Inizializza una nuova partita
 void Game::startNewGame() {
   loadLevels("config/levels.txt");
   if(!isLoaded()) return;
@@ -873,6 +888,7 @@ void Game::startNewGame() {
   runTime();
 }
 
+// Controlla se il livello è stato completato (tutti i nemici eliminati)
 bool Game::isLevelCompleted(){
   Map m = current_lvl->getMap();
   for(int i = 0; i < sizeGridY; i++){
@@ -885,6 +901,7 @@ bool Game::isLevelCompleted(){
   return true;
 }
 
+// Controlla se il livello è stato pulito completamente
 bool Game::isLevelCleared(){
   Map m = current_lvl->getMap();
   for(int i = 0; i < sizeGridY; i++){
@@ -897,6 +914,7 @@ bool Game::isLevelCleared(){
   return true;
 }
 
+//Aggiorna le vite a schermo
 void Game::updateLives(){
   wmove(win, sizeGridY, sizeGridX/2-2);
   wprintw(win, "    ");
@@ -906,10 +924,11 @@ void Game::updateLives(){
   }
 }
 
+//Disegna o cancella la porta di destra
 void Game::drawNextGateway(bool open){
   if(open){
     wmove(win, 9, 40);
-    printEntity(codeEntities::solidWall); // Disegna l'uscita
+    printEntity(codeEntities::solidWall);
     wmove(win, 10, 39);
     wprintw(win, " ");
     wmove(win, 11, 40);
@@ -918,10 +937,11 @@ void Game::drawNextGateway(bool open){
     mvprintw(start_y+9, start_x+40, "%s", " ");
     mvprintw(start_y+11, start_x+40, "%s", " ");
     wmove(win, 10, 39);
-    printEntity(codeEntities::solidWall);
+    printEntity(codeEntities::solidWall); //Cancella l'uscita
   }
 }
 
+//Disegna o cancella la porta di sinistra
 void Game::drawBackGateway(bool open){
   if(open){
     wmove(win, 10, 0);
@@ -929,15 +949,16 @@ void Game::drawBackGateway(bool open){
     attron(COLOR_PAIR(getEntityColor(codeEntities::solidWall)));
     mvprintw(start_y+9, start_x-1, "%s", getEntityChar(codeEntities::solidWall));
     mvprintw(start_y+11, start_x-1, "%s", getEntityChar(codeEntities::solidWall));
-    attroff(COLOR_PAIR(getEntityColor(codeEntities::solidWall)));
+    attroff(COLOR_PAIR(getEntityColor(codeEntities::solidWall))); //Disegna l'uscita
   } else {
     wmove(win, start_y+10, start_x);
     printEntity(codeEntities::solidWall);
     mvprintw(start_y+9, start_x-1, " ");
-    mvprintw(start_y+11, start_x-1, " ");
+    mvprintw(start_y+11, start_x-1, " "); //Cancella l'uscita
   }
 }
 
+//Aggiorna il tempo a schermo
 void Game::updateTime(){
   wmove(win, sizeGridY, sizeGridX - 10);
   wprintw(win, "%s", "Time: ");
@@ -945,6 +966,7 @@ void Game::updateTime(){
   wprintw(win, "%s", "  ");
 }
 
+//Aggiorna il punteggio a schermo
 void Game::updateScore(){
   wmove(win, sizeGridY, 1);
   wprintw(win, "%s", "Score: ");

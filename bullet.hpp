@@ -2,8 +2,8 @@
 #define PLAYERENEMIES_BULLET_H
 
 #include <chrono>
-#include "Levels.h"
-#include "Player.h"
+#include "Levels.hpp"
+#include "Player.hpp"
 
 class bullet {
 

@@ -75,14 +75,17 @@
     \centering
     \vspace*{3cm}
     {\Huge \textbf{Relazione su Bomberman}}\\[1cm]
-    {\LARGE Architettura degli Elaboratori - 2025/2026}\\[3cm]
+    {\LARGE Corso di Programmazione - 2025/2026}\\[1cm]
+    {\large UNIBO}\\[3cm]
     
-    \begin{tabular}{c c}
-        \textbf{Marco Rossi} & \textbf{Giulia Bianchi} \\
-        marco.rossi@studio.unibo.it & giulia.bianchi@studio.unibo.it \\[2cm]
-        \multicolumn{2}{c}{\textbf{Il Tuo Nome}} \\
-        \multicolumn{2}{c}{nome.cognome@studio.unibo.it}
-    \end{tabular}
+    \textbf{Pietro Lizzani} - 
+    pietro.lizzani@studio.unibo.it\\[0.5cm]
+    
+    \textbf{Simone Calderara} - 
+    simone.calderara@studio.unibo.it\\[0.5cm]
+    
+    \textbf{Zaccaria Goumri} - 
+    zaccaria.goumri@studio.unibo.it\\[0.5cm]
     
     \vfill
     {\large \today}
@@ -94,10 +97,9 @@
 % INTRODUZIONE E LAVORO CONDIVISO
 % ==========================================
 \section{Introduzione}
-Il nostro progetto \`e un clone di Bomberman sviluppato per essere giocato interamente nel terminale. Per la grafica testuale e i comandi da tastiera abbiamo usato la libreria \texttt{ncurses}. 
-Per rispettare le regole del corso, abbiamo fatto a meno di qualsiasi funzione o classe della Standard Template Library (STL). Non c'\`e traccia di \texttt{std::string} o \texttt{std::vector}; abbiamo implementato le liste a mano con i puntatori e gestito i testi avendo array di \texttt{char}.
+Il nostro progetto \`e un clone di Bomberman sviluppato per essere giocato interamente nel terminale. Per la grafica testuale e i comandi da tastiera abbiamo usato la libreria \texttt{ncurses}, disponibile per C++ sia su Windows che su Linux, percui il gioco è compilabile  e giocabile su entrambi i sistemi operativi. 
 
-Per tenere il codice ordinato e facilitare la stampa a schermo, abbiamo creato una struct globale che unisce l'oggetto logico (muri, player, nemici) al suo carattere ASCII e al suo colore.
+Per tenere il codice ordinato e facilitare la stampa a schermo, abbiamo creato una struct globale che unisce l'oggetto logico (muri, player, nemici) al suo carattere ASCII e al suo colore. CodeEntities è un struttura enum contenente tutti i caratteri di cui il gioco necessita, identificandoli univocamente.
 \begin{codesnap}
 struct Entity{
   codeEntities codeEntity;
@@ -106,23 +108,22 @@ struct Entity{
 };
 \end{codesnap}
 
-Inoltre abbiamo usato \texttt{nodelay()} per l'input. Volevamo un gioco fluido in tempo reale, quindi non potevamo permettere che il programma si fermasse ad aspettare la pressione di un tasto (che \`e quello che fa \texttt{getch()} di base). Con \texttt{nodelay}, il loop del gioco va avanti in background e aggiorna nemici e bombe senza bloccarsi.
 
 % ==========================================
 % COMPONENTE 1
 % ==========================================
-\section{Gestione entit\`a di gioco (Marco Rossi)}
-Nella mia parte mi sono occupato dei movimenti e dei nemici. Tutto viene gestito dal file \texttt{Game.cpp} che interroga le classi a ogni ciclo.
+\section{Gestione delle entit\`a di gioco (Simone Calderara)}
+Nella mia parte mi sono occupato dei movimenti e dei nemici. Tutte le singole classi vengono gestite dal file \texttt{Game.cpp} che le interroga a ogni ciclo.
 
 Il \textbf{Player} \`e la classe per il giocatore. Per gestire i movimenti, prima di spostare le coordinate guardo cosa c'\`e nella cella di destinazione sulla mappa. Se c'\`e un muro, il movimento viene annullato e il giocatore resta fermo. Oltre a muoversi, la classe gestisce la vita e un periodo di invulnerabilit\`a temporanea che si attiva appena si subisce un danno, cosi si evitano morti a catena.
 
 Per i nemici ho usato l'ereditariet\`a. Ho creato una classe base \textbf{\texttt{Enemy}} da cui ho derivato due tipi di avversari:
 \begin{itemize}
-    \item \textbf{Enemy1}: Un nemico abbastanza semplice che segue il giocatore cercando di andargli addosso aggirando gli ostacoli.
-    \item \textbf{Enemy2}: Un po' pi\`u difficile. Oltre a muoversi, ogni tot di tempo genera un proiettile (bullet).
+    \item \textbf{Enemy1}: Un nemico abbastanza semplice che si muove casualmente nella mappa.
+    \item \textbf{Enemy2}: Pi\`u complesso. Oltre a muoversi, ogni 10 secondi genera un proiettile (bullet) se il giocatore è in zona di tiro che si muove alla velocità di 2 celle al secondo.
 \end{itemize}
 
-I proiettili li gestisco separatamente dai nemici in un loro array indipendente. In questo modo se il nemico che ha sparato muore, il proiettile continua ad andare dritto finch\'e non va fuori schermo o colpisce un muro e viene distrutto.
+I proiettili avanzano finchè non incontrano un muro solido, distruttibile o il giocatore. Il giocatore può piazzare una bomba in tempo e far esplodere il proiettile se rientra nel raggio della bomba.
 \begin{codesnap}
 bool bullet::iswall(int x, int y, const Map map) {
     if (x < 0 || x >= gridWidth || y < 0 || y >= gridHeight) {
@@ -133,15 +134,14 @@ bool bullet::iswall(int x, int y, const Map map) {
 }
 \end{codesnap}
 
-Un problema bello grosso \`e stato rendere fluido il movimento. Usando \texttt{time(NULL)} contavo solo in secondi interi, e il risultato era che i nemici andavano avanti a scatti enormi ogni secondo esatto. 
-Avendo questo problema mi sono avvalso di una LLM per capire come risolvere il problema in C++.
+All'inizio usavamo ctime come libreria per gestire il tempo di gioco, ma usando \texttt{time(NULL)} la misura minima sono i secondi interi, e il risultato era che i nemici andavano avanti a scatti enormi ogni secondo esatto.
+Avendo questo problema ho usato l'IA per capire come risolvere il problema in C++.
 
 \textit{Prompt usato: "Come faccio in C++ a contare i millisecondi invece dei secondi? time(NULL) mi da solo i secondi interi e i nemici si muovono a scatti."}
 
 Mi ha suggerito di usare \texttt{std::chrono}, che conta i millisecondi. In questo modo ho potuto avere movimenti fluidi.
 \begin{codesnap}
-const auto enemyElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-  now - lastEnemyMoveTime);
+const auto enemyElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastEnemyMoveTime);
 if(enemyElapsed.count() >= ENEMY_SPEED) lastEnemyMoveTime = now;
 \end{codesnap}
 
@@ -150,12 +150,12 @@ if(enemyElapsed.count() >= ENEMY_SPEED) lastEnemyMoveTime = now;
 % COMPONENTE 2
 % ==========================================
 \newpage
-\section{Gestione mappa e livelli (Giulia Bianchi)}
-Io ho gestito la mappa del gioco e il caricamento dei livelli. Avendo il divieto di usare i vector, ho risolto allocando dinamicamente a mano (con \texttt{new}) un array di puntatori a char (\texttt{char**}).
+\section{Gestione dei livelli e della classifica (Pietro Lizzani)}
+Io ho gestito la mappa del gioco e il caricamento dei livelli. Avendo il divieto di usare i vector, ho risolto allocando dinamicamente a mano (con \texttt{new}) un array di puntatori a char (\texttt{char**}) rinominandolo con typedef in \textbf{Map}.
 
-La cosa pi\`u difficile era che il prof chiedeva la persistenza dei livelli: se spacchi un muro nel livello 1 e vai nel livello 2, quando torni indietro il muro deve essere ancora rotto.
-Per risolverla ho implementato una \textbf{lista doppiamente concatenata}.
-Ogni livello \`e un \texttt{Lvl}, e dentro ci ho messo due puntatori: uno che punta al livello dopo e uno che punta al livello prima.
+\subsection{Lettura da file e Mappa dei livelli}
+Dovendo tenere memorizzati i livelli anche dopo il loro completamento, ho implementato come da consegna una \textbf{lista doppiamente concatenata}.
+Ogni livello \`e un \texttt{Lvl}, e dentro ci sono due puntatori: uno che punta al livello dopo e uno che punta al livello prima, con le relative funzioni per passare da un livello all'altro e controlli sull'ultimo e sul primo (Per evitare Segmentation fault).
 
 \begin{codesnap}
 class Lvl{
@@ -172,20 +172,43 @@ class Lvl{
 };
 \end{codesnap}
 
-Cos\`i facendo, quando entri in una porta, il gioco sposta solo il puntatore \texttt{current\_lvl} in avanti o all'indietro nella lista. La memoria della stanza rimane esattamente com'era e non viene ricaricata da zero.
+Cos\`i facendo, quando entri in una porta, il gioco sposta solo il puntatore \texttt{current\_lvl} in avanti o all'indietro nella lista. La memoria della stanza rimane esattamente com'era e non viene ricaricata da zero. Il gioco carica i livelli direttamente all'avvio dal file \texttt{levels.txt}. Se durante la lettura le misure non corrispondono con quelle dei livelli (40x20), il gioco non si avvia.\\[0.2cm]
 
-Inizialmente volevamo usare stanze generate a caso (procedurali). Ne abbiamo parlato con l'IA ma ci siamo resi conto che aggiungere stanze a caso alla lista senza mai cancellarle ci avrebbe prima o poi saturato la RAM. Quindi abbiamo deciso di usare dei livelli fissi presi dal file \texttt{levels.txt}.
-Ho avuto per\`o un problema di crash se aprivo il gioco da una cartella sbagliata (es. da bin) perch\'e non trovava \texttt{levels.txt}. Non potendo usare std::string ho chiesto alla LLM un modo per risolvere.
 
-\textit{Prompt usato: "Il gioco crasha se lo apro dalla cartella bin perch\'e non trova levels.txt. Come faccio ad aggiungere '../' prima del nome del file come fallback senza usare std::string?"}
+\textbf{Game} contiene la funzione \texttt{drawLevel} che viene invocata all'inizio del gioco e ogni volta si cambi livello, caricando in Game ad esempio gli attributi del giocatore (posizione e vite), le posizioni dei nemici salvati in un array \texttt{enemies[]} composto da Enemy* e ovviamente disegnando a schermo il livello con i colori corretti.
 
-Mi ha suggerito un trick per aggiungere \texttt{../} al percorso usando \texttt{strcat} del C se il file non si apre subito.
+Per passare da un livello all'altro si utilizzano le porticine che si apriranno a destra quando nel livello corrente il giocatore avrà ucciso tutti gli enemies e a sinistra se esiste un livello precedente e ha ancora dei muri distruttibili sfruttabili per ottenere powerups.
+
+Un livello può essere rimosso dalla lista bidirezionale solo se tutti i nemici e i muri rompibili sono stati distrutti, andando a modificare il valore \texttt{nextLvl} e \texttt{precLvl} dei livelli adiacenti.
+
 \begin{codesnap}
-fstream inputFile;
-inputFile.open(file);
-if(!inputFile.is_open()){
-  char fallback[100] = "../";
-  inputFile.open(strcat(fallback, file));
+void Lvl::deleteLvl(bool deleteNext) {
+  //cancella il livello successivo a quello corrente
+  if(deleteNext && !isLast()) {
+    Lvl* temp = nextLvl;
+    nextLvl = nextLvl->getNextLvl();
+    if(nextLvl != nullptr) nextLvl->setPrecLvl(this);
+    delete temp;
+  }
+  //cancella il livello precedente a quello corrente
+  ...
+}
+\end{codesnap}
+
+\subsection{Salvataggio Punteggi}
+Ci sono 2 modi per ottenere punti nel gioco e salire in classifica: uccidere i mostri e spaccare i muri distruttibili. Inoltre abbiamo voluto aggiungere anche la possibilità di ottenere punti dai secondi rimasti al completamento dell'ultimo livello dando una sfida in piu al giocatore per cercare di completare il gioco il piu veloce possibile.
+
+I \textit{records} della classifica sono salvati nel file di gioco \textbf{scores.txt} come nomegiocatore, punteggio. Vengono letti e messi in ordine decrescente all'inizio del gioco e quando il gioco finisce e l'utente digita il proprio nome viene inserito in coda al file.
+\begin{codesnap}
+void Game::saveClassifica(const char* file){
+  ofstream outputFile;
+  outputFile.open(file);
+  record* r = classifica.getRecords();
+  while(r != nullptr){
+    outputFile << r->nome << ", " << r->punteggio << endl;
+    r = r->next;
+  }
+  outputFile.close();
 }
 \end{codesnap}
 
@@ -194,7 +217,7 @@ if(!inputFile.is_open()){
 % COMPONENTE 3
 % ==========================================
 \newpage
-\section{Gestione Bombe, Items e Dati (Zaccari Goumri)}
+\section{Gestione delle Bombe, Items e Dati (Zaccaria Goumri)}
 L'ultima parte del gioco riguarda le bombe, i potenziamenti e la classifica.
 
 \subsection{Logica delle Bombe}
@@ -237,26 +260,11 @@ Un altro aspetto puro di game design di cui mi sono occupato \`e stato lo \textb
 \subsection{Gestione del Tempo}
 Oltre ai bonus e alle bombe, ho gestito la logica del \textbf{Tempo}. Ogni livello ha un limite di secondi prestabilito per essere completato (200 secondi), costringendo il giocatore a non rimanere fermo troppo a lungo. Il timer viene calcolato e aggiornato a schermo in parallelo col resto del gioco, e se raggiunge lo zero scatta immediatamente il Game Over. Il tempo rimanente di ogni livello viene aggiunto a quello del livello sucessivo.
 
-\subsection{Salvataggio Punteggi}
-Ci sono 2 modi per ottenere punti nel gioco e salire in classifica: uccidere i mostri e spaccare i muri distruttibili. Inoltre abbiamo voluto aggiungere anche la possibilità di ottenere punti dai secondi rimasti al completamento dell'ultimo livello dando una sfida in piu al giocatore per cercare di completare il gioco il piu veloce possibile.
-
-I \textit{records} della classifica sono salvati nel file di gioco \textbf{scores.txt} come nomegiocatore, punteggio. Vengono letti e messi in ordine decrescente all'inizio del gioco e quando il gioco finisce e l'utente digita il proprio nome viene inserito in coda al file.
-\begin{codesnap}
-    void Game::saveClassifica(const char* file){
-      ofstream outputFile;
-      outputFile.open(file);
-      record* r = classifica.getRecords();
-      while(r != nullptr){
-        outputFile << r->nome << ", " << r->punteggio << endl;
-        r = r->next;
-      }
-      outputFile.close();
-    }
-\end{codesnap}
-
+\newpage
 \section{Conclusioni}
-Lo sviluppo di questo progetto ci ha permesso di mettere in pratica i concetti studiati durante il corso.
+Lo sviluppo di questo progetto ci ha permesso di mettere in pratica i concetti studiati durante il corso, ampliando i progetti da file singoli fino a un intero workspace di classi.
+
 Per quanto riguarda il supporto dell'Intelligenza Artificiale, il suo impiego si \`e rivelato estremamente utile per sbloccare le fasi di stallo durante lo sviluppo. Ci siamo avvalsi della LLM (Gemini e/o Claude) principalmente per ricevere consigli logici quando non sapevamo come aggirare un limite tecnico, per farci aiutare nella risoluzione di bug e scoprire da cosa erano causati.
 
-Link video illustrativo del gioco: \href{https://drive.google.com/file/d/1Xkvq53LNjwL0HlNmUK7vDq5v5aAl7pTv/view?usp=drive_link}{clicca qui}
+\href{https://drive.google.com/file/d/1Xkvq53LNjwL0HlNmUK7vDq5v5aAl7pTv/view?usp=drive_link}{Clicca qui} per il link video illustrativo della demo del gioco
 \end{document}

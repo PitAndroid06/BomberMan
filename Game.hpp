@@ -6,20 +6,20 @@
 #include <ctime>
 #include <cstring>
 #include <fstream>
-#include "Classifica.h"
-#include "Player.h"
-#include "Bomb.h"
-#include "Item.h"
-#include "Time.h"
-#include "enemy1.h"
-#include "enemy2.h"
+#include "Classifica.hpp"
+#include "Player.hpp"
+#include "Bomb.hpp"
+#include "Item.hpp"
+#include "Time.hpp"
+#include "enemy1.hpp"
+#include "enemy2.hpp"
 using namespace std;
 
 enum codeEntities{breakableWall, solidWall, player, enemy1, enemy2, bonus1, bonus2, bombAnimation1, bombAnimation2, explosion, lives, bulletLeft, bulletRight, bulletUp, bulletDown};
 
 const int CHARS_TO_DISPLAY = 15;
-const int MAX_ENEMIES = 10;
-const int DROP_CHANCE = 20;
+const int MAX_ENEMIES = 10;     //numero massimo di nemici per livello
+const int DROP_CHANCE = 20;     //percentuale di probabilità che un muro distruttibile lasci cadere un bonus
 const int ENEMY_SPEED = 1000;   // 1000 millisecondi tra un passo e l'altro
 const int BULLET_SPEED = 500;   // 500 millisecondi per cella (0,5 celle/sec)
 

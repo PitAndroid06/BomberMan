@@ -2,7 +2,7 @@
 // Created by simone on 12/10/25.
 //
 
-#include "Player.h"
+#include "Player.hpp"
 Player::Player(int y, int x)
 {
     yLoc=y;

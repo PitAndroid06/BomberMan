@@ -1,7 +1,7 @@
 #ifndef BOMBERMAN_BOMB_H
 #define BOMBERMAN_BOMB_H
 
-#include "Levels.h"
+#include "Levels.hpp"
 
 struct bomb {
     int x, y;       // x = colonna, y = riga
